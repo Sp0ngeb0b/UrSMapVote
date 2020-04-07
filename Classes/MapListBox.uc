@@ -104,5 +104,5 @@ function doubleClickItem(UWindowListBoxItem item) {
 defaultproperties
 {
      ItemHeight=13.000000
-     ListClass=Class'UrSMapVote2.MapListBoxItem'
+     ListClass=Class'MapListBoxItem'
 }

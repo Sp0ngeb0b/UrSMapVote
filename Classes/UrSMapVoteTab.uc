@@ -1,7 +1,6 @@
 class UrSMapVoteTab extends NexgenPanel;
 
 #exec TEXTURE IMPORT NAME=NoShot   FILE=Resources\noshot.pcx   GROUP="GFX" FLAGS=0 MIPS=OFF
-#exec TEXTURE IMPORT NAME=SearchIcon   FILE=Resources\SearchIcon.pcx   GROUP="GFX" FLAGS=2 MIPS=OFF
 
 var UrSMapVoteClient xClient;
 var NexgenSharedDataContainer xConf;
@@ -435,15 +434,6 @@ function notify(UWindowDialogControl control, byte eventType) {
 		}
   }
 
-}
-
-/***************************************************************************************************
- *
- *  $DESCRIPTION  Closes window.
- *
- **************************************************************************************************/
-function closeVotewindow() {
-  xClient.client.mainWindow.close();
 }
 
 /***************************************************************************************************

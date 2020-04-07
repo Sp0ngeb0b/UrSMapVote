@@ -735,9 +735,9 @@ static function string formatCmdArgFixed(coerce string arg) {
 defaultproperties
 {
      versionNum=100
-     extConfigClass=Class'UrSMapVote2.UrSMapVoteConfigExt'
-     sysConfigClass=Class'UrSMapVote2.UrSMapVoteConfigSys'
-     clientControllerClass=Class'UrSMapVote2.UrSMapVoteClient'
+     extConfigClass=Class'UrSMapVoteConfigExt'
+     sysConfigClass=Class'UrSMapVoteConfigSys'
+     clientControllerClass=Class'UrSMapVoteClient'
      pluginName="UrSMapVote"
      pluginAuthor="Sp0ngeb0b"
      pluginVersion="1.00"

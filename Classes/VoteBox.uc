@@ -181,5 +181,5 @@ function SelectMap(string MapName) {
 
 defaultproperties
 {
-     ListClass=Class'UrSMapVote2.VoteBoxItem'
+     ListClass=Class'VoteBoxItem'
 }

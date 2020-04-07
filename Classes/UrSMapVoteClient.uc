@@ -233,7 +233,7 @@ simulated function closeVotewindow() {
 
   setTimer(0.0, false);
   
-  if (mapVoteTab != none && !client.player.bIsTyping && mapVoteTab.bWindowVisible) mapVoteTab.closeVotewindow();
+  if (mapVoteTab != none && mapVoteTab.bWindowVisible && client.mainWindow.bWindowVisible) client.mainWindow.close();
 }
 
 /***************************************************************************************************
