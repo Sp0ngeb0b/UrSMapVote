@@ -269,15 +269,17 @@ function string addMap(string mapName) {
  *
  **************************************************************************************************/
 function dataContainerAvailable(NexgenSharedDataContainer container) {
+
   if (container.containerID == class'UrSMapVoteConfigDC'.default.containerID) {
     xConf = container;
     if(mapListData != none) loadMapList();
     
-      tipColor.R = xConf.getByte("tipColorR");
-      tipColor.B = xConf.getByte("tipColorG");
-      tipColor.G = xConf.getByte("tipColorB");
-      infoTipsLabel.setTextColor(tipColor);
-      hintLabel.setTextColor(tipColor);
+    xClient.tipsAvailable();
+    tipColor.R = xConf.getByte("tipColorR");
+    tipColor.B = xConf.getByte("tipColorG");
+    tipColor.G = xConf.getByte("tipColorB");
+    infoTipsLabel.setTextColor(tipColor);
+    hintLabel.setTextColor(tipColor);
   }
   else if (container.containerID == "maplist") {
     mapListData = container;

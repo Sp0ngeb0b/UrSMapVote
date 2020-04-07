@@ -1,7 +1,12 @@
 // Private Nexgen Plugin for UrS
-// UrSMapVote (C) 2012 by Patrick 'Sp0ngeb0b' Peltzer
-
+// UrSMapVote (C) 2020 by Patrick 'Sp0ngeb0b' Peltzer
+// Based on BDBMAPVOTE code, implements frontend in Nexgen
 /*
+  Changelog Version 2b:
+    - Fixed talking prompt being closed with vote window for real
+    - First tip to be displayed selected randomly now
+    - Implements features of UrSMapSettings
+    
   Changelog Version 2:
     - Fixed talking prompt being closed with vote window
     - Spectators also have access to vote tab now

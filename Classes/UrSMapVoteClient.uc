@@ -128,6 +128,22 @@ simulated function clientInitialized() {
 
 /***************************************************************************************************
  *
+ *  $DESCRIPTION  Called when the tips data is available.
+ *
+ **************************************************************************************************/
+simulated function tipsAvailable() {
+  local int tipsAmount;
+  
+  // Set random first tip
+  for(tipsAmount=0; tipsAmount<mapvoteTab.xConf.getArraySize("infoTips"); tipsAmount++) {
+    if(mapvoteTab.xConf.getString("infoTips",tipsAmount) == "") break;
+  }
+
+  if(tipsAmount > 0) currentTip = Rand(tipsAmount); // Random int from [0, tipsAmount-1]
+}
+
+/***************************************************************************************************
+ *
  *  $DESCRIPTION  Show next tip.
  *
  **************************************************************************************************/
@@ -149,7 +165,6 @@ function timer() {
     openMapvote();
     setTimer(0.0, false);
   }
-  
 }
 
 /***************************************************************************************************
