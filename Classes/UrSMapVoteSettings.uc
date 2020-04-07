@@ -15,8 +15,6 @@ var NexgenEditControl infoTipsInp[8];
 var UWindowSmallButton resetButton;
 var UWindowSmallButton saveButton;
 
-
-
 /***************************************************************************************************
  *
  *  $DESCRIPTION  Creates the contents of the panel.
@@ -24,30 +22,30 @@ var UWindowSmallButton saveButton;
  *
  **************************************************************************************************/
 function setContent() {
-	local int region;
-	local int index;
+  local int region;
+  local int index;
 
   xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
 
   // Create layout & add components.
-	createPanelRootRegion();
-	splitRegionH(12, defaultComponentDist);
-	addLabel("MapVote Settings", true, TA_Center);
+  createPanelRootRegion();
+  splitRegionH(12, defaultComponentDist);
+  addLabel("MapVote Settings", true, TA_Center);
 
-	splitRegionH(1, defaultComponentDist);
-	addComponent(class'NexgenDummyComponent');
+  splitRegionH(1, defaultComponentDist);
+  addComponent(class'NexgenDummyComponent');
 
-	splitRegionH(20, defaultComponentDist, , true);
-	region = currRegion;
-	skipRegion();
-	splitRegionV(196, , , true);
-	skipRegion();
-	divideRegionV(2, defaultComponentDist);
-	saveButton = addButton(client.lng.saveTxt);
-	resetButton = addButton(client.lng.resetTxt);
+  splitRegionH(20, defaultComponentDist, , true);
+  region = currRegion;
+  skipRegion();
+  splitRegionV(196, , , true);
+  skipRegion();
+  divideRegionV(2, defaultComponentDist);
+  saveButton = addButton(client.lng.saveTxt);
+  resetButton = addButton(client.lng.resetTxt);
 
-	selectRegion(region);
-	selectRegion(divideRegionH(9, defaultComponentDist));
+  selectRegion(region);
+  selectRegion(divideRegionH(9, defaultComponentDist));
   
   divideRegionV(2, defaultComponentDist);
   divideRegionV(2, defaultComponentDist);
@@ -85,8 +83,8 @@ function setContent() {
 
   // Configure components.
   delayInp.setNumericOnly(true);
-	voteTimeInp.setNumericOnly(true);
-	RepeatInp.setNumericOnly(true);
+  voteTimeInp.setNumericOnly(true);
+  RepeatInp.setNumericOnly(true);
   
   tipDurationInp.setNumericOnly(true);
   tipDurationInp.setNumericFloat(true);
@@ -109,10 +107,10 @@ function setContent() {
  *
  **************************************************************************************************/
 function setValues() {
-	local int index;
-	
-	// Quit if configuration is not available.
-	if (xConf == none) return;
+  local int index;
+  
+  // Quit if configuration is not available.
+  if (xConf == none) return;
 
   delayInp.setValue(xConf.getString("opendelay"));
   voteTimeInp.setValue(xConf.getString("votelimit"));
@@ -123,7 +121,6 @@ function setValues() {
   tipColorBInp.setValue(xConf.getString("tipColorB"));
   for(index=0; index<8; index++) infoTipsInp[index].setValue(xConf.getString("infoTips", index));
 }
-
 
 /***************************************************************************************************
  *
@@ -136,15 +133,13 @@ function setValues() {
  *
  **************************************************************************************************/
 function dataContainerAvailable(NexgenSharedDataContainer container) {
-	if (container.containerID == class'UrSMapVoteConfigDC'.default.containerID) {
-		xConf = container;
-		setValues();
-		resetButton.bDisabled = false;
-		saveButton.bDisabled = false;
-	}
+  if (container.containerID == class'UrSMapVoteConfigDC'.default.containerID) {
+    xConf = container;
+    setValues();
+    resetButton.bDisabled = false;
+    saveButton.bDisabled = false;
+  }
 }
-
-
 
 /***************************************************************************************************
  *
@@ -152,7 +147,7 @@ function dataContainerAvailable(NexgenSharedDataContainer container) {
  *
  **************************************************************************************************/
 function saveSettings() {
-	local int index;
+  local int index;
 
   xClient.setVar("UrSmv_config", "opendelay", delayInp.getValue());
   xClient.setVar("UrSmv_config", "votelimit", voteTimeInp.getValue());
@@ -162,11 +157,9 @@ function saveSettings() {
   xClient.setVar("UrSmv_config", "tipColorG", tipColorGInp.getValue());
   xClient.setVar("UrSmv_config", "tipColorB", tipColorBInp.getValue());
   for(index=0; index<8; index++) xClient.setVar("UrSmv_config", "infoTips", infoTipsInp[index].getValue(), index);
-	
-	xClient.saveSharedData("UrSmv_config");
+  
+  xClient.saveSharedData("UrSmv_config");
 }
-
-
 
 /***************************************************************************************************
  *
@@ -179,18 +172,18 @@ function saveSettings() {
  *
  **************************************************************************************************/
 function varChanged(NexgenSharedDataContainer container, string varName, optional int index) {
-	if (container.containerID ~= class'UrSMapVoteConfigDC'.default.containerID) {
-		switch (varName) {
-			case "opendelay": delayInp.setValue(container.getString(varName));              break;
-			case "votelimit": voteTimeInp.setValue(container.getString(varName));           break;
-			case "RepeatLimit": RepeatInp.setValue(container.getString(varName));           break;
+  if (container.containerID ~= class'UrSMapVoteConfigDC'.default.containerID) {
+    switch (varName) {
+      case "opendelay": delayInp.setValue(container.getString(varName));              break;
+      case "votelimit": voteTimeInp.setValue(container.getString(varName));           break;
+      case "RepeatLimit": RepeatInp.setValue(container.getString(varName));           break;
       case "tipDuration": tipDurationInp.setValue(Left(container.getString(varName), InStr(container.getString(varName), ".")+3)); break;
       case "tipColorR": tipColorRInp.setValue(container.getString(varName));           break;
       case "tipColorG": tipColorGInp.setValue(container.getString(varName));           break;
       case "tipColorB": tipColorBInp.setValue(container.getString(varName));           break;
       case "infoTips": infoTipsInp[index].setValue(container.getString(varName, index));break;
     }
-	}
+  }
 }
 
 /***************************************************************************************************
@@ -203,27 +196,24 @@ function varChanged(NexgenSharedDataContainer container, string varName, optiona
  *
  **************************************************************************************************/
 function notify(UWindowDialogControl control, byte eventType) {
-	super.notify(control, eventType);
+  super.notify(control, eventType);
 
-	// Button pressed?
-	if (control != none && eventType == DE_Click && control.isA('UWindowSmallButton') &&
-	    !UWindowSmallButton(control).bDisabled) {
+  // Button pressed?
+  if (control != none && eventType == DE_Click && control.isA('UWindowSmallButton') &&
+      !UWindowSmallButton(control).bDisabled) {
 
-		switch (control) {
-			case resetButton: setValues(); break;
-			case saveButton: saveSettings(); break;
-		}
-	}
+    switch (control) {
+      case resetButton: setValues(); break;
+      case saveButton: saveSettings(); break;
+    }
+  }
 }
-
-
 
 /***************************************************************************************************
  *
  *  $DESCRIPTION  Default properties block.
  *
  **************************************************************************************************/
-
 defaultproperties
 {
      panelIdentifier="UrSmapvotesettings"

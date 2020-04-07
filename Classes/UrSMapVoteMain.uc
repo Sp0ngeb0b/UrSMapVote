@@ -28,7 +28,6 @@ var int    ServerTravelTime;
 var string maplist[128];
 var bool bReadMaps;
 
-
 /***************************************************************************************************
  *
  *  $DESCRIPTION  Initializes the plugin. Note that if this function returns false the plugin will
@@ -39,23 +38,49 @@ var bool bReadMaps;
  **************************************************************************************************/
 function bool initialize() {
   local int index;
-  
-  // Let super class initialize.
-	if (!super.initialize()) {
-		return false;
-	}
+  local string levelFile;
 
-	// Check Repeat list
+  // Let super class initialize.
+  if (!super.initialize()) {
+    return false;
+  }
+
+  // Check Repeat list
   for (index = UrSMapVoteConfig(xConf).RepeatLimit; index < arrayCount(UrSMapVoteConfig(xConf).votedMaps); index++) {
     if (UrSMapVoteConfig(xConf).votedMaps[index] != "") {
       UrSMapVoteConfig(xConf).votedMaps[index] = "";
     }
   }
   UrSMapVoteConfig(xConf).saveconfig();
-	
-	return true;
-}
+  
+  // Adjust map settings for current map
+  levelFile = class'NexgenUtil'.static.getLevelFileName(level);
+  for (index = 0; index < arrayCount(UrSMapVoteConfig(xConf).mapSettings); index++) {
+    if (levelFile == UrSMapVoteConfig(xConf).getMap(index)) {
 
+      // Modify TeamScoreLimit
+      setTeamScoreLimit(UrSMapVoteConfig(xConf).getTeamScore(index));
+
+      // Modify TimeLimit
+      setTimeLimit(UrSMapVoteConfig(xConf).getTimeLimit(index));
+
+      // Modify GameSpeed
+      setGameSpeed(UrSMapVoteConfig(xConf).getGameSpeed(index));
+
+      break;
+    }
+  }
+  if (index == arrayCount(UrSMapVoteConfig(xConf).mapSettings)) {
+    setTeamScoreLimit(UrSMapVoteConfig(xConf).defaultScore);
+    setTimeLimit(UrSMapVoteConfig(xConf).defaultTime);
+    setGameSpeed(UrSMapVoteConfig(xConf).defaultSpeed);
+  }
+      
+  // Add new right type
+  control.sConf.addRightDefiniton("mapsettings", "Modify map settings.");
+  
+  return true;
+}
 
 /***************************************************************************************************
  *
@@ -66,9 +91,9 @@ function bool initialize() {
  *
  **************************************************************************************************/
 function createSharedDataContainers() {
-	dataSyncMgr.addDataContainer(class'UrSMapVoteConfigDC');
+  dataSyncMgr.addDataContainer(class'UrSMapVoteConfigDC');
+  dataSyncMgr.addDataContainer(class'UrSMapSettingsConfigDC');
 }
-
 
 /***************************************************************************************************
  *
@@ -84,7 +109,7 @@ function Mutate(string MutateString, PlayerPawn Sender) {
   Super.Mutate(MutateString, Sender);
 
   xClient = UrSMapVoteClient(getXClient(sender));
-	if (xClient == none) return;
+  if (xClient == none) return;
 
   if(left(Caps(MutateString),10) == "BDBMAPVOTE") {
     if(Mid(Caps(MutateString),11,8) == "VOTEMENU") {
@@ -102,8 +127,6 @@ function Mutate(string MutateString, PlayerPawn Sender) {
    }
 }
 
-
-
 /***************************************************************************************************
  *
  *  $DESCRIPTION  Called when the value of a shared variable has been updated.
@@ -116,37 +139,36 @@ function Mutate(string MutateString, PlayerPawn Sender) {
  *
  **************************************************************************************************/
 function varChanged(NexgenSharedDataContainer container, string varName, optional int index, optional Object author) {
-	local NexgenClient client;
-	local bool bIsSensitive;
-	local string varIndex;
+  local NexgenClient client;
+  local bool bIsSensitive;
+  local string varIndex;
 
-	// Log admin actions.
-	if (author != none && (author.isA('NexgenClient') || author.isA('NexgenClientController'))) {
-		// Get client.
-		if (author.isA('NexgenClientController')) {
-			client = NexgenClientController(author).client;
-		} else {
-			client = NexgenClient(author);
-		}
+  // Log admin actions.
+  if (author != none && (author.isA('NexgenClient') || author.isA('NexgenClientController'))) {
+    // Get client.
+    if (author.isA('NexgenClientController')) {
+      client = NexgenClientController(author).client;
+    } else {
+      client = NexgenClient(author);
+    }
 
-		// Only log changes for configuration variables.
-		if (container.containerID ~= class'UrSMapVoteConfigDC'.default.containerID) {
+    // Only log changes for configuration variables.
+    if (container.containerID ~= class'UrSMapVoteConfigDC'.default.containerID || 
+        container.containerID ~= class'UrSMapSettingsConfigDC'.default.containerID) {
 
-			// Check for arrays.
-			if (container.isArray(varName)) {
-				varIndex = "[" $ index $ "]";
-			}
+      // Check for arrays.
+      if (container.isArray(varName)) {
+        varIndex = "[" $ index $ "]";
+      }
 
-			// Log action.
-			control.logAdminAction(client, "<C07>%1 has set %2.%3 to \"%4\".", client.playerName,
-			                       string(UrSMapVoteConfig(xConf).class), varName $ varIndex,
-			                       container.getString(varName, index),
-			                       client.player.playerReplicationInfo, true);
-		}
-	}
+      // Log action.
+      control.logAdminAction(client, "<C07>%1 has set %2.%3 to \"%4\".", client.playerName,
+                             string(UrSMapVoteConfig(xConf).class), varName $ varIndex,
+                             container.getString(varName, index),
+                             client.player.playerReplicationInfo, true);
+    }
+  }
 }
-
-
 
 /***************************************************************************************************
  *
@@ -155,16 +177,15 @@ function varChanged(NexgenSharedDataContainer container, string varName, optiona
  *
  **************************************************************************************************/
 function gameEnded() {
-	local NexgenClient client;
-	local UrSMapVoteClient xClient;
+  local NexgenClient client;
+  local UrSMapVoteClient xClient;
 
-	DeathMatchPlus(Level.Game).bDontRestart = true;
+  DeathMatchPlus(Level.Game).bDontRestart = true;
   TimeLeft = UrSMapVoteConfig(xConf).votelimit;
   delayTime = UrSMapVoteConfig(xConf).opendelay;
 
   bGameEnded = true;
 }
-
 
 /***************************************************************************************************
  *
@@ -173,23 +194,22 @@ function gameEnded() {
  *
  **************************************************************************************************/
 function OpenVoteWindow() {
- 	local NexgenClient client;
-	local UrSMapVoteClient xClient;
+  local NexgenClient client;
+  local UrSMapVoteClient xClient;
 
   if (bLevelSwitchPending) return;
 
   // Open window.
- 	for (client = control.clientList; client != none; client = client.nextClient) {
+  for (client = control.clientList; client != none; client = client.nextClient) {
     if (!client.bSpectator) {
-		  xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
-		  if(xClient != none) {
+      xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
+      if(xClient != none) {
         if(xClient.client.player.bIsTyping) xClient.setTimer(1.0, true);
         else xClient.openMapvote();
       }
     }
-	}
+  }
 }
-
 
 /***************************************************************************************************
  *
@@ -203,15 +223,15 @@ function virtualTimer() {
   local pawn aPawn;
   local int i, VoterNum,NoVoteCount,mapnum;
   local NexgenClient client;
-	local UrSMapVoteClient xClient;
-	local int x;
+  local UrSMapVoteClient xClient;
+  local int x;
   local NexgenSharedDataContainer container;
   
   // Called only one time
   // Sets up the array and loads the maplist
-	if(!bReadMaps) {
-		bReadMaps = true;
-		for(x=0;x<32;x++) PlayerIDList[x] = -1;
+  if(!bReadMaps) {
+    bReadMaps = true;
+    for(x=0;x<32;x++) PlayerIDList[x] = -1;
 
     // Locate NexgenPlus
     for(i=0;i<ArrayCount(control.plugins);i++) {
@@ -221,12 +241,11 @@ function virtualTimer() {
       }
     }
     
-		if(container == none) {
-      log ("MAPLIST DATACONTAINER NOT FOUND ! ! ! ");
+    if(container == none) {
+      log("MAPLIST DATACONTAINER NOT FOUND ! ! ! ");
       return;
     }
-    
-    
+       
     MapCount = container.getInt("numMaps");
 
     // Load maps from container
@@ -235,41 +254,41 @@ function virtualTimer() {
     }
   }
 
-	// Do ServerTravel.
+  // Do ServerTravel.
   if(bLevelSwitchPending) {
     for (client = control.clientList; client != none; client = client.nextClient) {
-	      xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
-	    	xClient.TimeLeft  = 0;
-  	}
+        xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
+        xClient.TimeLeft  = 0;
+    }
     if( Level.NextURL == "" ) {
-	    if(Level.NextSwitchCountdown < 0) {
+      if(Level.NextSwitchCountdown < 0) {
 
         // Get a random mapfile
         // MapCount = maps.numMaps;
-	      mapnum = Rand(MapCount) + 1;
+        mapnum = Rand(MapCount) + 1;
 
-	      while(Left(maplist[mapnum],3) == "[X]") {
+        while(Left(maplist[mapnum],3) == "[X]") {
           mapnum = Rand(MapCount) + 1;
         }
 
         ServerTravelString = SetupGameMap(maplist[mapnum]);
         Level.ServerTravel(ServerTravelString, false);
-	    } else Level.ServerTravel(ServerTravelString, false);
+      } else Level.ServerTravel(ServerTravelString, false);
     }
     return;
   }
 
-	// Check players
-	CleanUpPlayerIDs();
+  // Check players
+  CleanUpPlayerIDs();
 
-	// Update votes
-	TallyVotes(false);
+  // Update votes
+  TallyVotes(false);
 
   // Game has ended. Do Stuff:
-	if (bGameEnded) {
+  if (bGameEnded) {
 
-	  // Open VoteWindow.
-	  if (delayTime > 0) {
+    // Open VoteWindow.
+    if (delayTime > 0) {
       delayTime--;
 
       if (delayTime == 0) {
@@ -284,16 +303,16 @@ function virtualTimer() {
       TimeLeft--;
 
       for (client = control.clientList; client != none; client = client.nextClient) {
-	      xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
-	      xClient.delayTime = delayTime;
-	    	xClient.TimeLeft  = TimeLeft;
-	    	xclient.bGameEnded = bGameEnded;
-  	  }
+        xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
+        xClient.delayTime = delayTime;
+        xClient.TimeLeft  = TimeLeft;
+        xclient.bGameEnded = bGameEnded;
+      }
 
       if(TimeLeft == 10) control.broadcastMsg("<C04>10 seconds left to vote.");
 
       // Countdown Voice Announcer.
-	    if(TimeLeft < 11 && TimeLeft > 0 ) {
+      if(TimeLeft < 11 && TimeLeft > 0 ) {
         for( P = Level.PawnList; P!=None; P=P.nextPawn ) {
           if(P.IsA('TournamentPlayer')) TournamentPlayer(P).TimeMessage(TimeLeft);
         }
@@ -305,9 +324,9 @@ function virtualTimer() {
         for( aPawn=Level.PawnList; aPawn!=None; aPawn=aPawn.NextPawn ) {
            if(aPawn.bIsPlayer && PlayerPawn(aPawn) != none) {
              VoterNum = FindPlayerIndex(PlayerPawn(aPawn).PlayerReplicationInfo.PlayerID);
-  			  	 if(VoterNum > -1)	{
-  				  	 if(PlayerVote[VoterNum] == 0) NoVoteCount++;
-  				   }
+             if(VoterNum > -1)  {
+               if(PlayerVote[VoterNum] == 0) NoVoteCount++;
+             }
            }
         }
         if(NoVoteCount == 0)
@@ -316,7 +335,6 @@ function virtualTimer() {
     if(TimeLeft == 0) TallyVotes(true);
   }
 }
-
 
 /***************************************************************************************************
  *
@@ -339,9 +357,8 @@ function int FindPlayerIndex(int PlayerID) {
     }
    }
 
-	 return -1;
+   return -1;
 }
-
 
 /***************************************************************************************************
  *
@@ -371,7 +388,6 @@ function CleanUpPlayerIDs() {
    }
 }
 
-
 /***************************************************************************************************
  *
  *  $DESCRIPTION  Main Vote Function. Handles all given votes.
@@ -391,7 +407,7 @@ function TallyVotes(bool bForceMapSwitch) {
    local string winmap;
 
   // Check whether we are done
-	if(bLevelSwitchPending) return;
+  if(bLevelSwitchPending) return;
 
    PlayersThatVoted = 0;
    for(x=0;x<32;x++) {
@@ -524,7 +540,7 @@ function updateRepeatList(string mapname) {
  **************************************************************************************************/
 function CloseVoteWindows() {
   local NexgenClient client;
-	local UrSMapVoteClient xClient;
+  local UrSMapVoteClient xClient;
 
   for (client = control.clientList; client != none; client = client.nextClient) {
 
@@ -610,7 +626,6 @@ function string SetupGameMap(string MapName)
   return MapName$"?game="$UrSMapVoteConfig(xConf).GameType;
 }
 
-
 /***************************************************************************************************
  *
  *  $DESCRIPTION Updates the vote results on the client's window
@@ -618,27 +633,96 @@ function string SetupGameMap(string MapName)
  **************************************************************************************************/
 function updatevotelist() {
   local NexgenClient client;
-	local UrSMapVoteClient xClient;
-	local int x;
+  local UrSMapVoteClient xClient;
+  local int x;
 
   // get client list.
-	for (client = control.clientList; client != none; client = client.nextClient) {
+  for (client = control.clientList; client != none; client = client.nextClient) {
 
-		xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
+    xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
 
     if (xClient != None) {
 
       // First clear all existing entries
-	  	xClient.clearList();
+      xClient.clearList();
 
       // Update entries
-		  x=0;
-	  	while(MAPVOTENAME[x] != "" && MAPVOTECOUNTS[x] > 0 && x<99) {
+      x=0;
+      while(MAPVOTENAME[x] != "" && MAPVOTECOUNTS[x] > 0 && x<99) {
         xClient.updateVoteBox(MAPVOTECOUNTS[x], MAPVOTENAME[x], x);
         x++;
       }
     }
+  }
+}
+
+/***************************************************************************************************
+ *
+ *  $DESCRIPTION  Changes the time limit for the current map.
+ *  $PARAM        amount  The new time limit.
+ *
+ **************************************************************************************************/
+function setTimeLimit(int amount) {
+	local DeathMatchPlus game;
+	local int previousTimeLimit;
+
+	// Preliminary checks.
+	if (!level.game.isA('DeathMatchPlus')) {
+		return;
 	}
+
+	// Get DeathMatchPlus game.
+	game = DeathMatchPlus(level.game);
+
+	// Change time limit.
+	previousTimeLimit = game.timeLimit;
+
+	game.timeLimit = amount;
+	TournamentGameReplicationInfo(game.gameReplicationInfo).timeLimit = amount;
+	game.saveConfig();
+
+}
+
+/***************************************************************************************************
+ *
+ *  $DESCRIPTION  Changes the team score limit for the current map.
+ *  $PARAM        amount  The new team score limit.
+ *
+ **************************************************************************************************/
+function setTeamScoreLimit(int amount) {
+	local TeamGamePlus game;
+
+	// Preliminary checks.
+	if (!level.game.isA('TeamGamePlus') || amount < 1) {
+		return;
+	}
+
+	// Get TeamGamePlus game.
+	game = TeamGamePlus(level.game);
+
+	// Change frag limit.
+	game.goalTeamScore = amount;
+	TournamentGameReplicationInfo(game.gameReplicationInfo).goalTeamScore = amount;
+	game.saveConfig();
+}
+
+/***************************************************************************************************
+ *
+ *  $DESCRIPTION  Changes the game speed for the current map.
+ *  $PARAM        gameSpeed  The new game speed limit.
+ *
+ **************************************************************************************************/
+function setGameSpeed(int gameSpeed) {
+
+	// Preliminary checks.
+	if (gameSpeed < 50) {
+		return;
+	}
+
+	// Change the game speed.
+	level.game.setGameSpeed(gameSpeed / 100.0);
+	level.game.saveConfig();
+	level.game.gameReplicationInfo.saveConfig();
 }
 
 /***************************************************************************************************
@@ -654,48 +738,46 @@ function updatevotelist() {
  *
  **************************************************************************************************/
 function setFixed(string dataContainerID, string varName, coerce string value, optional int index, optional Object author) {
-	local NexgenSharedDataContainer dataContainer;
-	local NexgenClient client;
-	local NexgenExtendedClientController xClient;
-	local string oldValue;
-	local string newValue;
+  local NexgenSharedDataContainer dataContainer;
+  local NexgenClient client;
+  local NexgenExtendedClientController xClient;
+  local string oldValue;
+  local string newValue;
 
   // Get the data container.
-	dataContainer = dataSyncMgr.getDataContainer(dataContainerID);
-	if (dataContainer == none) return;
+  dataContainer = dataSyncMgr.getDataContainer(dataContainerID);
+  if (dataContainer == none) return;
 
-	oldValue = dataContainer.getString(varName, index);
-	dataContainer.set(varName, value, index);
-	newValue = dataContainer.getString(varName, index);
+  oldValue = dataContainer.getString(varName, index);
+  dataContainer.set(varName, value, index);
+  newValue = dataContainer.getString(varName, index);
 
-	// Notify clients if variable has changed.
-	if (newValue != oldValue) {
-		for (client = control.clientList; client != none; client = client.nextClient) {
-			xClient = getXClient(client);
-			if (xClient != none && xClient.bInitialSyncComplete && dataContainer.mayRead(xClient, varName)) {
-				if (dataContainer.isArray(varName)) {
-					xClient.sendStr(xClient.CMD_SYNC_PREFIX @ xClient.CMD_UPDATE_VAR
-						              @ static.formatCmdArgFixed(dataContainerID)
-						              @ static.formatCmdArgFixed(varName)
-						              @ index
-						              @ static.formatCmdArgFixed(newValue));
-				} else {
-					xClient.sendStr(xClient.CMD_SYNC_PREFIX @ xClient.CMD_UPDATE_VAR
-						              @ static.formatCmdArgFixed(dataContainerID)
-						              @ static.formatCmdArgFixed(varName)
-						              @ static.formatCmdArgFixed(newValue));
-				}
-			}
-		}
-	}
+  // Notify clients if variable has changed.
+  if (newValue != oldValue) {
+    for (client = control.clientList; client != none; client = client.nextClient) {
+      xClient = getXClient(client);
+      if (xClient != none && xClient.bInitialSyncComplete && dataContainer.mayRead(xClient, varName)) {
+        if (dataContainer.isArray(varName)) {
+          xClient.sendStr(xClient.CMD_SYNC_PREFIX @ xClient.CMD_UPDATE_VAR
+                          @ static.formatCmdArgFixed(dataContainerID)
+                          @ static.formatCmdArgFixed(varName)
+                          @ index
+                          @ static.formatCmdArgFixed(newValue));
+        } else {
+          xClient.sendStr(xClient.CMD_SYNC_PREFIX @ xClient.CMD_UPDATE_VAR
+                          @ static.formatCmdArgFixed(dataContainerID)
+                          @ static.formatCmdArgFixed(varName)
+                          @ static.formatCmdArgFixed(newValue));
+        }
+      }
+    }
+  }
 
-	// Also notify the server side controller of this event.
-	if (newValue != oldValue) {
-		varChanged(dataContainer, varName, index, author);
-	}
+  // Also notify the server side controller of this event.
+  if (newValue != oldValue) {
+    varChanged(dataContainer, varName, index, author);
+  }
 }
-
-
 
 /***************************************************************************************************
  *
@@ -704,27 +786,27 @@ function setFixed(string dataContainerID, string varName, coerce string value, o
  *
  **************************************************************************************************/
 static function string formatCmdArgFixed(coerce string arg) {
-	local string result;
+  local string result;
 
-	result = arg;
+  result = arg;
 
-	// Escape argument if necessary.
-	if (result == "") {
-		result = "\"\"";                      // Fix (originally, arg was assigned instead of result -_-)
-	} else {
-		result = class'NexgenUtil'.static.replace(result, "\\", "\\\\");
-		result = class'NexgenUtil'.static.replace(result, "\"", "\\\"");
-		result = class'NexgenUtil'.static.replace(result, chr(0x09), "\\t");
-		result = class'NexgenUtil'.static.replace(result, chr(0x0A), "\\n");
-		result = class'NexgenUtil'.static.replace(result, chr(0x0D), "\\r");
+  // Escape argument if necessary.
+  if (result == "") {
+    result = "\"\"";                      // Fix (originally, arg was assigned instead of result -_-)
+  } else {
+    result = class'NexgenUtil'.static.replace(result, "\\", "\\\\");
+    result = class'NexgenUtil'.static.replace(result, "\"", "\\\"");
+    result = class'NexgenUtil'.static.replace(result, chr(0x09), "\\t");
+    result = class'NexgenUtil'.static.replace(result, chr(0x0A), "\\n");
+    result = class'NexgenUtil'.static.replace(result, chr(0x0D), "\\r");
 
-		if (instr(arg, " ") > 0) {
-			result = "\"" $ result $ "\"";
-		}
-	}
+    if (instr(arg, " ") > 0) {
+      result = "\"" $ result $ "\"";
+    }
+  }
 
-	// Return result.
-	return result;
+  // Return result.
+  return result;
 }
 
 /***************************************************************************************************
@@ -732,7 +814,6 @@ static function string formatCmdArgFixed(coerce string arg) {
  *  $DESCRIPTION  Default properties block.
  *
  **************************************************************************************************/
-
 defaultproperties
 {
      versionNum=100
@@ -741,5 +822,5 @@ defaultproperties
      clientControllerClass=Class'UrSMapVoteClient'
      pluginName="UrSMapVote"
      pluginAuthor="Sp0ngeb0b"
-     pluginVersion="1.00"
+     pluginVersion="2b"
 }

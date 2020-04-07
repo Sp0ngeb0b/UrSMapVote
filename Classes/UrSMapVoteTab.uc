@@ -33,75 +33,74 @@ var Color tipColor;
  *
  **************************************************************************************************/
 function setContent() {
-	local NexgenContentPanel p;
-	local NexgenContentPanel pp;
-	local int region;
+  local NexgenContentPanel p;
+  local NexgenContentPanel pp;
+  local int region;
 
-	xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
+  xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
 
-	// Create layout & add components.
-	createWindowRootRegion();
+  // Create layout & add components.
+  createWindowRootRegion();
   splitRegionH(32, defaultComponentDist, , true);    
-	splitRegionV(192, defaultComponentDist);
+  splitRegionV(192, defaultComponentDist);
   
   // Tip label
-	p = addContentPanel();
+  p = addContentPanel();
   p.splitRegionV(28, defaultComponentDist);
   hintLabel = p.addLabel("Hint:", true, TA_Left);
   infoTipsLabel = p.addLabel();
 
   // Map list
-	p = addContentPanel();
-	p.splitRegionH(16, defaultComponentDist);
-	p.addLabel("Maplist", true, TA_Center);
+  p = addContentPanel();
+  p.splitRegionH(16, defaultComponentDist);
+  p.addLabel("Maplist", true, TA_Center);
   mapList = MapListBox(p.addListBox(class'MapListBox'));
 
   splitRegionH(144, defaultComponentDist, , false);
 
-	// Level info.
-	p = addContentPanel();
-	p.splitRegionV(136, defaultComponentDist);
-	pp = p.addContentPanel();
+  // Level info.
+  p = addContentPanel();
+  p.splitRegionV(136, defaultComponentDist);
+  pp = p.addContentPanel();
   LevelShot = pp.addImageBox(, true, 128, 128);
 
-	p.splitRegionH(16);
-	p.addLabel("Level Information", true, TA_Center);
+  p.splitRegionH(16);
+  p.addLabel("Level Information", true, TA_Center);
   
   p.splitRegionH(16);
   p.skipRegion();
   
-	p.splitRegionH(20, defaultComponentDist, , true);     
-	p.splitRegionV(48);
+  p.splitRegionH(20, defaultComponentDist, , true);     
+  p.splitRegionV(48);
   voteButton = p.addButton("Vote", 96, AL_Right);
 
-	p.divideRegionH(4);
+  p.divideRegionH(4);
   p.divideRegionH(4);
   p.addLabel(client.lng.fileTxt, true);
   p.addLabel(client.lng.titleTxt, true);
-	p.addLabel(client.lng.authorTxt, true);
-	p.addLabel(client.lng.idealPlayerCountTxt, true);
+  p.addLabel(client.lng.authorTxt, true);
+  p.addLabel(client.lng.idealPlayerCountTxt, true);
 
   fileLabel = p.addLabel();
-	titleLabel = p.addLabel();
-	authorLabel = p.addLabel();
-	playersLabel = p.addLabel();
+  titleLabel = p.addLabel();
+  authorLabel = p.addLabel();
+  playersLabel = p.addLabel();
 
-	splitRegionH(16);
-	p = addContentPanel();
-	p.splitRegionV(64, defaultComponentDist);
+  splitRegionH(16);
+  p = addContentPanel();
+  p.splitRegionV(64, defaultComponentDist);
   p.addLabel("Rank", true, TA_Center);
   p.splitRegionV(64, defaultComponentDist);
   p.addLabel("Votes", true, TA_Center);
   p.addLabel("MapName", true, TA_Center);
 
-	ResultBox = VoteBox(addListBox(class'VoteBox'));
+  ResultBox = VoteBox(addListBox(class'VoteBox'));
 
-	// Configure components.
+  // Configure components.
   infoTipsLabel.setFont(F_Bold);
   voteButton.bDisabled = xClient.client.bSpectator;
-	loadMapList();
+  loadMapList();
 }
-
 
 /***************************************************************************************************
  *
@@ -109,37 +108,35 @@ function setContent() {
  *
  **************************************************************************************************/
 function loadMapList() {
-	local int index;
-	local string mapName;
+  local int index;
+  local string mapName;
 
-	// Clear the map list.
-	mapList.items.clear();
-	mapList.selectedItem = none;
-	mapSelected();
+  // Clear the map list.
+  mapList.items.clear();
+  mapList.selectedItem = none;
+  mapSelected();
 
-	// Check if the map list is available.
-	if (!bMapListAvailable || xConf == none) {
-		addMap("Receiving map list...");
-		return;
-	}
+  // Check if the map list is available.
+  if (!bMapListAvailable || xConf == none) {
+    addMap("Receiving map list...");
+    return;
+  }
   
-	// Load the map list.
-	index = 0;
-	while (index < mapListData.getInt("numMaps")) {
+  // Load the map list.
+  index = 0;
+  while (index < mapListData.getInt("numMaps")) {
     mapName = mapListData.getString("maps", index);
     
-		// Add map?
-		if (class'NexgenUtil'.static.isValidLevel(mapName)) {
-			addMap(mapName);
-		}
+    // Add map?
+    if (class'NexgenUtil'.static.isValidLevel(mapName)) {
+      addMap(mapName);
+    }
 
-		// Continue with next map.
-		index++;
-	}
-	mapList.sort();
+    // Continue with next map.
+    index++;
+  }
+  mapList.sort();
 }
-
-
 
 /***************************************************************************************************
  *
@@ -156,21 +153,19 @@ function mapSelected() {
     LevelShot.image = Texture'NoShot';
     return;
   }
-  	
+    
   mapname = MapListBoxItem(mapList.selectedItem).displayText;
-	
+  
   if (resultbox.selectedItem != none) {
     resultbox.selectedItem.bSelected = false;
     resultbox.selectedItem = none;
   }
-	
-	i = InStr(Caps(MapName), ".UNR");
+  
+  i = InStr(Caps(MapName), ".UNR");
     if(i != -1) MapName = Left(MapName, i);
 
   loadMapInfo(mapname);
 }
-
-
 
 /***************************************************************************************************
  *
@@ -202,8 +197,7 @@ function resultboxselected() {
   loadMapInfo(mapname);
   
 }
-  
-  
+
 /***************************************************************************************************
  *
  *  $DESCRIPTION  Loads the LevelSummary for the specified Map.
@@ -213,17 +207,17 @@ function resultboxselected() {
 function loadMapInfo(string mapname) {
   local LevelSummary L;
   
-	Screenshot = Texture(DynamicLoadObject(MapName$".Screenshot", class'Texture'));
-	if (Screenshot == none) {
-		LevelShot.image = Texture'NoShot';
-	} else {
+  Screenshot = Texture(DynamicLoadObject(MapName$".Screenshot", class'Texture'));
+  if (Screenshot == none) {
+    LevelShot.image = Texture'NoShot';
+  } else {
     LevelShot.image = Screenshot;
-	}
+  }
 
-	fileLabel.setText(mapname);
+  fileLabel.setText(mapname);
             
-	L = LevelSummary(DynamicLoadObject(MapName$".LevelSummary", class'LevelSummary'));
-	if(L != None) {
+  L = LevelSummary(DynamicLoadObject(MapName$".LevelSummary", class'LevelSummary'));
+  if(L != None) {
     titleLabel.setText(L.Title);
     authorLabel.setText(L.Author);
     playersLabel.setText(L.IdealPlayerCount);
@@ -231,10 +225,8 @@ function loadMapInfo(string mapname) {
     titleLabel.setText("Custom map");
     authorLabel.setText("-");
     playersLabel.setText("-");
-  }
-  
+  }  
 }
-
 
 /***************************************************************************************************
  *
@@ -245,14 +237,14 @@ function loadMapInfo(string mapname) {
  **************************************************************************************************/
 function string addMap(string mapName) {
   local int i, x;
-	local MapListBoxItem item;
-	
-	xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
+  local MapListBoxItem item;
+  
+  xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
 
   item = MapListBoxItem(mapList.items.append(class'MapListBoxItem'));
 
-	if(xConf != none) {
-	  // Check whether map has been marked out
+  if(xConf != none) {
+    // Check whether map has been marked out
     for(x=0; x < xConf.getInt("RepeatLimit"); x++) {
       if (xConf.getString("votedMaps", x) == mapname) {
         item.bMarked = true;
@@ -261,11 +253,10 @@ function string addMap(string mapName) {
     }
   }
   
-	i = InStr(Caps(MapName), ".UNR");
+  i = InStr(Caps(MapName), ".UNR");
   if(i != -1) MapName = Left(MapName, i);
-	item.displayText = mapName;
+  item.displayText = mapName;
 }
-
 
 /***************************************************************************************************
  *
@@ -279,20 +270,20 @@ function string addMap(string mapName) {
  **************************************************************************************************/
 function dataContainerAvailable(NexgenSharedDataContainer container) {
   if (container.containerID == class'UrSMapVoteConfigDC'.default.containerID) {
-		xConf = container;
-		if(mapListData != none) loadMapList();
+    xConf = container;
+    if(mapListData != none) loadMapList();
     
       tipColor.R = xConf.getByte("tipColorR");
       tipColor.B = xConf.getByte("tipColorG");
       tipColor.G = xConf.getByte("tipColorB");
       infoTipsLabel.setTextColor(tipColor);
       hintLabel.setTextColor(tipColor);
-	}
+  }
   else if (container.containerID == "maplist") {
-		mapListData = container;
-		bMapListAvailable = true;
-		if(xConf != none) loadMapList();
-	}
+    mapListData = container;
+    bMapListAvailable = true;
+    if(xConf != none) loadMapList();
+  }
 }
 
 /***************************************************************************************************
@@ -306,11 +297,11 @@ function dataContainerAvailable(NexgenSharedDataContainer container) {
  *
  **************************************************************************************************/
 function varChanged(NexgenSharedDataContainer container, string varName, optional int index) {
-	if (container.containerID ~= class'UrSMapVoteConfigDC'.default.containerID) {
-		switch (varName) {
-			case "tipColorR": 
-			case "tipColorG": 
-			case "tipColorB": 
+  if (container.containerID ~= class'UrSMapVoteConfigDC'.default.containerID) {
+    switch (varName) {
+      case "tipColorR": 
+      case "tipColorG": 
+      case "tipColorB": 
         tipColor.R = xConf.getByte("tipColorR");
         tipColor.B = xConf.getByte("tipColorG");
         tipColor.G = xConf.getByte("tipColorB");
@@ -318,7 +309,7 @@ function varChanged(NexgenSharedDataContainer container, string varName, optiona
         hintLabel.setTextColor(tipColor);
       break;
     }
-	}
+  }
 }
 
 /***************************************************************************************************
@@ -350,21 +341,20 @@ function updateVoteBox(int Votes, string mapname, int rank) {
   
   // Create a new entry
   item = VoteBoxItem(ResultBox.items.append(class'VoteBoxItem'));
-	item.VoteCount = Votes;
-	item.rank      = rank + 1;
-	
-	i = InStr(Caps(MapName), ".UNR");
+  item.VoteCount = Votes;
+  item.rank      = rank + 1;
+  
+  i = InStr(Caps(MapName), ".UNR");
   if(i != -1) MapName = Left(MapName, i);
   
-	item.MapName   = mapname;
-	
-	// See if we had selected this map
-	if(PrevSelectedMap == MapName && mapList.selectedItem == none) {
+  item.MapName   = mapname;
+  
+  // See if we had selected this map
+  if(PrevSelectedMap == MapName && mapList.selectedItem == none) {
     ResultBox.SelectMap(PrevSelectedMap);
   }
 
 }
-
 
 /***************************************************************************************************
  *
@@ -376,20 +366,20 @@ function updateVoteBox(int Votes, string mapname, int rank) {
  *
  **************************************************************************************************/
 function notify(UWindowDialogControl control, byte eventType) {
-	local MapListBoxItem newItem;
-	local string mapname;
+  local MapListBoxItem newItem;
+  local string mapname;
 
-	super.notify(control, eventType);
-	
-	xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
+  super.notify(control, eventType);
+  
+  xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
 
-	// Map selected?
-	if (control == mapList && eventType == DE_Click) {
-		mapSelected();
-	}
-	
-	// ResultBox entry selected?
-	if (control == ResultBox && eventType == DE_Click) {
+  // Map selected?
+  if (control == mapList && eventType == DE_Click) {
+    mapSelected();
+  }
+  
+  // ResultBox entry selected?
+  if (control == ResultBox && eventType == DE_Click) {
     resultboxselected();
   }
   
@@ -413,12 +403,12 @@ function notify(UWindowDialogControl control, byte eventType) {
     if(!xClient.client.bSpectator) xClient.client.player.consoleCommand("mutate BDBMAPVOTE MAP"@ResultBox.getMapName(VoteBoxItem(ResultBox.SelectedItem))  $".unr");
   }
   
-	// Button pressed?
-	if (control != none && eventType == DE_Click && control.isA('UWindowSmallButton') &&
-	    !UWindowSmallButton(control).bDisabled) {
+  // Button pressed?
+  if (control != none && eventType == DE_Click && control.isA('UWindowSmallButton') &&
+      !UWindowSmallButton(control).bDisabled) {
 
-		switch (control) {
-			case VoteButton:
+    switch (control) {
+      case VoteButton:
       if (mapList.selectedItem == none && ResultBox.selectedItem == none  ||
           mapList.selectedItem != none && MapListBoxItem(mapList.selectedItem).displayText == "") {
         return;
@@ -428,9 +418,8 @@ function notify(UWindowDialogControl control, byte eventType) {
       
       xClient.client.player.consoleCommand("mutate BDBMAPVOTE MAP"@mapname $".unr");
       
-		}
+    }
   }
-
 }
 
 /***************************************************************************************************
@@ -438,7 +427,6 @@ function notify(UWindowDialogControl control, byte eventType) {
  *  $DESCRIPTION  Default properties block.
  *
  **************************************************************************************************/
-
 defaultproperties
 {
      panelIdentifier="UrSMapVote"

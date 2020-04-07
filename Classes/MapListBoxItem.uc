@@ -19,17 +19,17 @@ var int voteCount;
  **************************************************************************************************/
 function int compare(UWindowList a, UWindowList b) {
   if (MapListBoxItem(a).voteCount > 0 && MapListBoxItem(b).voteCount > 0) {
-  	if (MapListBoxItem(a).voteCount < MapListBoxItem(b).voteCount) {
-		  return 1;
-	  } else {
-	  	return -1;
-	  }
-	}
-	if (MapListBoxItem(a).displayText < MapListBoxItem(b).displayText) {
-		return -1;
-	} else {
-		return 1;
-	}
+    if (MapListBoxItem(a).voteCount < MapListBoxItem(b).voteCount) {
+      return 1;
+    } else {
+      return -1;
+    }
+  }
+  if (MapListBoxItem(a).displayText < MapListBoxItem(b).displayText) {
+    return -1;
+  } else {
+    return 1;
+  }
 }
 
 

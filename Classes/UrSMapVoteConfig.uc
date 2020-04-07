@@ -12,6 +12,12 @@ var config float tipDuration;
 var config byte tipColorR;
 var config byte tipColorG;
 var config byte tipColorB;
+var config int defaultScore;
+var config int defaultTime;
+var config int defaultSpeed;
+var config string mapSettings[128];
+
+const seperator = ",";
 
 /***************************************************************************************************
  *
@@ -21,13 +27,77 @@ var config byte tipColorB;
  **************************************************************************************************/
 function install() {
 
-	if (lastInstalledVersion < 100) installVersion100();
-	
-	lastInstalledVersion = 100;
-	
+  if (lastInstalledVersion < 100) installVersion100();
+  
+  lastInstalledVersion = 100;
+  
   super.install();
 }
 
+/***************************************************************************************************
+ *
+ *  $DESCRIPTION  Returns the mapname from the config string
+ *
+ **************************************************************************************************/
+function string getMap(int index) {
+  local string data;
+  
+  data = mapSettings[index];
+  
+  if(data == "") return "";
+  
+  return Left(Data, InStr(Data, seperator));
+}
+
+/***************************************************************************************************
+ *
+ *  $DESCRIPTION  Returns the teamscore from the config string
+ *
+ **************************************************************************************************/
+function int getTeamScore(int index) {
+  local string data;
+
+  data = mapSettings[index];
+  
+  // Remove Mapname
+  data = mid(data, InStr(data, seperator)+Len(seperator));
+
+  return int(Left(Data, InStr(data, seperator)));
+}
+
+/***************************************************************************************************
+ *
+ *  $DESCRIPTION  Returns the timelimit from the config string
+ *
+ **************************************************************************************************/
+function int getTimeLimit(int index) {
+  local string data;
+
+  data = mapSettings[index];
+
+  // Remove Mapname and TeamScore
+  data = mid(data, InStr(data, seperator)+Len(seperator));
+  data = mid(data, InStr(data, seperator)+Len(seperator));
+
+  return int(Left(Data, InStr(data, seperator)));
+}
+
+/***************************************************************************************************
+ *
+ *  $DESCRIPTION  Returns the gamespeed from the config string
+ *
+ **************************************************************************************************/
+function int getGameSpeed(int index) {
+  local string data;
+
+  data = mapSettings[index];
+
+  // Remove Mapname, TeamScore and TimeLimit
+  data = mid(data, InStr(data, seperator)+Len(seperator));
+  data = mid(data, InStr(data, seperator)+Len(seperator));
+
+  return int(mid(Data, InStr(data, seperator)+Len(seperator)));
+}
 
 /***************************************************************************************************
  *

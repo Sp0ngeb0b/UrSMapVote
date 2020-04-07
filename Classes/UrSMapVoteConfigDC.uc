@@ -22,20 +22,20 @@ var byte tipColorB;
  *
  **************************************************************************************************/
 function loadData() {
-	local int index;
+  local int index;
 
-	xConf = UrSMapVoteConfig(xControl.xConf);
+  xConf = UrSMapVoteConfig(xControl.xConf);
 
-	opendelay           = xConf.opendelay;
-	votelimit           = xConf.votelimit;
-	MidGameVotePercent  = xConf.MidGameVotePercent;
-	GameType            = xConf.GameType;
-	RepeatLimit         = xConf.RepeatLimit;
-	for (index = 0; index < arrayCount(votedMaps); index++)
-	  votedMaps[index]  = xConf.votedMaps[index];
+  opendelay           = xConf.opendelay;
+  votelimit           = xConf.votelimit;
+  MidGameVotePercent  = xConf.MidGameVotePercent;
+  GameType            = xConf.GameType;
+  RepeatLimit         = xConf.RepeatLimit;
+  for (index = 0; index < arrayCount(votedMaps); index++)
+    votedMaps[index]  = xConf.votedMaps[index];
     
   for (index = 0; index < arrayCount(infoTips); index++)
-	  infoTips[index]  = xConf.infoTips[index];
+    infoTips[index]  = xConf.infoTips[index];
     
    tipDuration        = xConf.tipDuration;
    tipColorR          = xConf.tipColorR;
@@ -50,7 +50,7 @@ function loadData() {
  *
  **************************************************************************************************/
 function saveData() {
-	xConf.saveConfig();
+  xConf.saveConfig();
 }
 
 /***************************************************************************************************
@@ -64,13 +64,13 @@ function saveData() {
  *
  **************************************************************************************************/
 function set(string varName, coerce string value, optional int index) {
-	switch (varName) {
-	  case "opendelay":              opendelay              = clamp(int(value), 0, 999);    if (xConf != none) { xConf.opendelay          = opendelay;              } break;
-	  case "votelimit":              votelimit              = clamp(int(value), 0, 999);    if (xConf != none) { xConf.votelimit          = votelimit;              } break;
-	  case "MidGameVotePercent":     MidGameVotePercent     = clamp(int(value), 0, 100);    if (xConf != none) { xConf.MidGameVotePercent = MidGameVotePercent;     } break;
-	  case "GameType":               GameType               = value;                        if (xConf != none) { xConf.GameType           = GameType;               } break;
-		case "RepeatLimit":            RepeatLimit            = clamp(int(value), 0, 999);    if (xConf != none) { xConf.RepeatLimit        = RepeatLimit;            } break;
-		case "votedMaps":              votedMaps[index]       = value;                        if (xConf != none) { xConf.votedMaps[index]   = votedMaps[index];       } break;
+  switch (varName) {
+    case "opendelay":              opendelay              = clamp(int(value), 0, 999);    if (xConf != none) { xConf.opendelay          = opendelay;              } break;
+    case "votelimit":              votelimit              = clamp(int(value), 0, 999);    if (xConf != none) { xConf.votelimit          = votelimit;              } break;
+    case "MidGameVotePercent":     MidGameVotePercent     = clamp(int(value), 0, 100);    if (xConf != none) { xConf.MidGameVotePercent = MidGameVotePercent;     } break;
+    case "GameType":               GameType               = value;                        if (xConf != none) { xConf.GameType           = GameType;               } break;
+    case "RepeatLimit":            RepeatLimit            = clamp(int(value), 0, 999);    if (xConf != none) { xConf.RepeatLimit        = RepeatLimit;            } break;
+    case "votedMaps":              votedMaps[index]       = value;                        if (xConf != none) { xConf.votedMaps[index]   = votedMaps[index];       } break;
     case "infoTips":               infoTips[index]        = value;                        if (xConf != none) { xConf.infoTips[index]    = infoTips[index];        } break;
     case "tipDuration":            tipDuration            = fclamp(float(value), 0, 99);  if (xConf != none) { xConf.tipDuration        = tipDuration;            } break;
     case "tipColorR":              tipColorR              = clamp(int(value), 0, 255);    if (xConf != none) { xConf.tipColorR          = tipColorR;              } break;
@@ -90,20 +90,20 @@ function set(string varName, coerce string value, optional int index) {
  *
  **************************************************************************************************/
 function bool mayRead(NexgenExtendedClientController xClient, string varName) {
-	switch (varName) {
-		case "opendelay":            return true;
-		case "votelimit":            return true;
-		case "MidGameVotePercent":   return true;
-		case "GameType":             return true;
-		case "RepeatLimit":          return true;
-		case "votedMaps":            return true;
-		case "infoTips":             return true;
-		case "tipDuration":          return true;
-		case "tipColorR":            return true;
-		case "tipColorG":            return true;
-		case "tipColorB":            return true;
-		default:                     return false;
-	}
+  switch (varName) {
+    case "opendelay":            return true;
+    case "votelimit":            return true;
+    case "MidGameVotePercent":   return true;
+    case "GameType":             return true;
+    case "RepeatLimit":          return true;
+    case "votedMaps":            return true;
+    case "infoTips":             return true;
+    case "tipDuration":          return true;
+    case "tipColorR":            return true;
+    case "tipColorG":            return true;
+    case "tipColorB":            return true;
+    default:                     return false;
+  }
 }
 
 /***************************************************************************************************
@@ -117,20 +117,20 @@ function bool mayRead(NexgenExtendedClientController xClient, string varName) {
  *
  **************************************************************************************************/
 function bool mayWrite(NexgenExtendedClientController xClient, string varName) {
-	switch (varName) {
-		case "opendelay":            return xClient.client.hasRight(xClient.client.R_ServerAdmin);
-		case "votelimit":            return xClient.client.hasRight(xClient.client.R_ServerAdmin);
-		case "MidGameVotePercent":   return xClient.client.hasRight(xClient.client.R_ServerAdmin);
-		case "GameType":             return xClient.client.hasRight(xClient.client.R_ServerAdmin);
-		case "RepeatLimit":          return xClient.client.hasRight(xClient.client.R_ServerAdmin);
-		case "votedMaps":            return xClient.client.hasRight(xClient.client.R_ServerAdmin);
-		case "infoTips":             return xClient.client.hasRight(xClient.client.R_ServerAdmin);
-		case "tipDuration":          return xClient.client.hasRight(xClient.client.R_ServerAdmin);
-		case "tipColorR":            return xClient.client.hasRight(xClient.client.R_ServerAdmin);
-		case "tipColorG":            return xClient.client.hasRight(xClient.client.R_ServerAdmin);
-		case "tipColorB":            return xClient.client.hasRight(xClient.client.R_ServerAdmin);
-		default:                     return false;
-	}
+  switch (varName) {
+    case "opendelay":            return xClient.client.hasRight(xClient.client.R_ServerAdmin);
+    case "votelimit":            return xClient.client.hasRight(xClient.client.R_ServerAdmin);
+    case "MidGameVotePercent":   return xClient.client.hasRight(xClient.client.R_ServerAdmin);
+    case "GameType":             return xClient.client.hasRight(xClient.client.R_ServerAdmin);
+    case "RepeatLimit":          return xClient.client.hasRight(xClient.client.R_ServerAdmin);
+    case "votedMaps":            return xClient.client.hasRight(xClient.client.R_ServerAdmin);
+    case "infoTips":             return xClient.client.hasRight(xClient.client.R_ServerAdmin);
+    case "tipDuration":          return xClient.client.hasRight(xClient.client.R_ServerAdmin);
+    case "tipColorR":            return xClient.client.hasRight(xClient.client.R_ServerAdmin);
+    case "tipColorG":            return xClient.client.hasRight(xClient.client.R_ServerAdmin);
+    case "tipColorB":            return xClient.client.hasRight(xClient.client.R_ServerAdmin);
+    default:                     return false;
+  }
 }
 
 
@@ -144,7 +144,7 @@ function bool mayWrite(NexgenExtendedClientController xClient, string varName) {
  *
  **************************************************************************************************/
 function bool maySaveData(NexgenExtendedClientController xClient) {
-	return xClient.client.hasRight(xClient.client.R_ServerAdmin);
+  return xClient.client.hasRight(xClient.client.R_ServerAdmin);
 }
 
 /***************************************************************************************************
@@ -157,11 +157,11 @@ function bool maySaveData(NexgenExtendedClientController xClient) {
  *
  **************************************************************************************************/
 function byte getByte(string varName, optional int index) {
-	switch (varName) {
-		case "tipColorR":  return tipColorR;
-		case "tipColorG":  return tipColorG;
-		case "tipColorB":  return tipColorB;
-	}
+  switch (varName) {
+    case "tipColorR":  return tipColorR;
+    case "tipColorG":  return tipColorG;
+    case "tipColorB":  return tipColorB;
+  }
 }
 
 /***************************************************************************************************
@@ -175,12 +175,12 @@ function byte getByte(string varName, optional int index) {
  *
  **************************************************************************************************/
 function int getInt(string varName, optional int index) {
-	switch (varName) {
-		case "opendelay":           return opendelay;
-		case "votelimit":           return votelimit;
-		case "MidGameVotePercent":  return MidGameVotePercent;
-		case "RepeatLimit":         return RepeatLimit;
-	}
+  switch (varName) {
+    case "opendelay":           return opendelay;
+    case "votelimit":           return votelimit;
+    case "MidGameVotePercent":  return MidGameVotePercent;
+    case "RepeatLimit":         return RepeatLimit;
+  }
 }
 
 /***************************************************************************************************
@@ -193,9 +193,9 @@ function int getInt(string varName, optional int index) {
  *
  **************************************************************************************************/
 function float getFloat(string varName, optional int index) {
-	switch (varName) {
-		case "tipDuration":         return tipDuration;
-	}
+  switch (varName) {
+    case "tipDuration":         return tipDuration;
+  }
 }
 
 /***************************************************************************************************
@@ -209,20 +209,20 @@ function float getFloat(string varName, optional int index) {
  *
  **************************************************************************************************/
 function string getString(string varName, optional int index) {
-	switch (varName) {
-		case "opendelay":            return string(opendelay);
-		case "votelimit":            return string(votelimit);
-		case "MidGameVotePercent":   return string(MidGameVotePercent);
-		case "GameType":             return GameType;
-		case "RepeatLimit":          return string(RepeatLimit);
-		case "votedMaps":            return votedMaps[index];
+  switch (varName) {
+    case "opendelay":            return string(opendelay);
+    case "votelimit":            return string(votelimit);
+    case "MidGameVotePercent":   return string(MidGameVotePercent);
+    case "GameType":             return GameType;
+    case "RepeatLimit":          return string(RepeatLimit);
+    case "votedMaps":            return votedMaps[index];
     case "infoTips":             return infoTips[index];
     case "tipDuration":          return string(tipDuration);
     case "tipColorR":            return string(tipColorR);
     case "tipColorG":            return string(tipColorG);
     case "tipColorB":            return string(tipColorB);
 
-	}
+  }
 }
 
 
@@ -234,7 +234,7 @@ function string getString(string varName, optional int index) {
  *
  **************************************************************************************************/
 function int getVarCount() {
-	return 11;
+  return 11;
 }
 
 /***************************************************************************************************
@@ -247,19 +247,19 @@ function int getVarCount() {
  *
  **************************************************************************************************/
 function string getVarName(int varIndex) {
-	switch (varIndex) {
-		case 0:  return "opendelay";
-		case 1:  return "votelimit";
-		case 2:  return "MidGameVotePercent";
-		case 3:  return "GameType";
-		case 4:  return "RepeatLimit";
-		case 5:  return "votedMaps";
+  switch (varIndex) {
+    case 0:  return "opendelay";
+    case 1:  return "votelimit";
+    case 2:  return "MidGameVotePercent";
+    case 3:  return "GameType";
+    case 4:  return "RepeatLimit";
+    case 5:  return "votedMaps";
     case 6:  return "infoTips";
     case 7:  return "tipDuration";
     case 8:  return "tipColorR";
     case 9:  return "tipColorG";
     case 10: return "tipColorB";
-	}
+  }
 }
 
 /***************************************************************************************************
@@ -272,19 +272,19 @@ function string getVarName(int varIndex) {
  *
  **************************************************************************************************/
 function byte getVarType(string varName) {
-	switch (varName) {
-		case "opendelay":            return DT_INT;
-		case "votelimit":            return DT_INT;
-		case "MidGameVotePercent":   return DT_INT;
-		case "GameType":             return DT_STRING;
-		case "RepeatLimit":          return DT_INT;
-		case "votedMaps":            return DT_STRING;
+  switch (varName) {
+    case "opendelay":            return DT_INT;
+    case "votelimit":            return DT_INT;
+    case "MidGameVotePercent":   return DT_INT;
+    case "GameType":             return DT_STRING;
+    case "RepeatLimit":          return DT_INT;
+    case "votedMaps":            return DT_STRING;
     case "infoTips":             return DT_STRING;
     case "tipDuration":          return DT_FLOAT;
     case "tipColorR":            return DT_BYTE;
     case "tipColorG":            return DT_BYTE;
     case "tipColorB":            return DT_BYTE;
-	}
+  }
 }
 
 /***************************************************************************************************
@@ -297,11 +297,11 @@ function byte getVarType(string varName) {
  *
  **************************************************************************************************/
 function int getArraySize(string varName) {
-	switch (varName) {
-		case "votedMaps":           return arrayCount(votedMaps);
+  switch (varName) {
+    case "votedMaps":           return arrayCount(votedMaps);
     case "infoTips":            return arrayCount(infoTips);
-		default:				            return 0;
-	}
+    default:                    return 0;
+  }
 }
 
 /***************************************************************************************************
@@ -314,13 +314,13 @@ function int getArraySize(string varName) {
  *
  **************************************************************************************************/
 function bool isArray(string varName) {
-	switch (varName) {
-		case "votedMaps":
+  switch (varName) {
+    case "votedMaps":
     case "infoTips":
-			return true;
-		default:
-			return false;
-	}
+      return true;
+    default:
+      return false;
+  }
 }
 
 /***************************************************************************************************

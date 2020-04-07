@@ -16,37 +16,37 @@ class MapListBox extends UWindowListBox;
 function drawItem(Canvas c, UWindowList item, float x, float y, float w, float h) {
   local int offsetX;
   
-	if(MapListBoxItem(item).bSelected) {
+  if(MapListBoxItem(item).bSelected) {
     if (MapListBoxItem(item).bMarked) {
       c.drawColor.r = 0;
-	   	c.drawColor.g = 0;
-	  	c.drawColor.b = 128;
-	  	drawStretchedTexture(c, x, y, w, h - 1, Texture'WhiteTexture');
-	  	c.drawColor.r = 255;
-	  	c.drawColor.g = 0;
-	  	c.drawColor.b = 0;
+      c.drawColor.g = 0;
+      c.drawColor.b = 128;
+      drawStretchedTexture(c, x, y, w, h - 1, Texture'WhiteTexture');
+      c.drawColor.r = 255;
+      c.drawColor.g = 0;
+      c.drawColor.b = 0;
     } else {
-	  	c.drawColor.r = 0;
-	  	c.drawColor.g = 0;
-	  	c.drawColor.b = 128;
-	  	drawStretchedTexture(c, x, y, w, h - 1, Texture'WhiteTexture');
-	  	c.drawColor.r = 255;
-	  	c.drawColor.g = 255;
-	  	c.drawColor.b = 255;
+      c.drawColor.r = 0;
+      c.drawColor.g = 0;
+      c.drawColor.b = 128;
+      drawStretchedTexture(c, x, y, w, h - 1, Texture'WhiteTexture');
+      c.drawColor.r = 255;
+      c.drawColor.g = 255;
+      c.drawColor.b = 255;
     }
-	} else if (MapListBoxItem(item).bMarked) {
+  } else if (MapListBoxItem(item).bMarked) {
     c.drawColor.r = 255;
-		c.drawColor.g = 0;
-	  c.drawColor.b = 0;
+    c.drawColor.g = 0;
+    c.drawColor.b = 0;
   } else {
-	  c.drawColor.r = 0;
-		c.drawColor.g = 0;
-	  c.drawColor.b = 0;
-	}
+    c.drawColor.r = 0;
+    c.drawColor.g = 0;
+    c.drawColor.b = 0;
+  }
 
-	c.font = root.fonts[F_Normal];
-	
-	if(MapListBoxItem(item).voteCount > 0) {
+  c.font = root.fonts[F_Normal];
+  
+  if(MapListBoxItem(item).voteCount > 0) {
     clipText(c, x + 2, y, MapListBoxItem(item).displayText);
     
     offsetX = 128;
@@ -65,17 +65,17 @@ function drawItem(Canvas c, UWindowList item, float x, float y, float w, float h
  *
  **************************************************************************************************/
 function MapListBoxItem getItemByID(int itemID) {
-	local MapListBoxItem item;
+  local MapListBoxItem item;
 
-	// Search for item.
-	for (item = MapListBoxItem(items); item != none; item = MapListBoxItem(item.next)) {
-		if (item.itemID == itemID) {
-			return item;
-		}
-	}
+  // Search for item.
+  for (item = MapListBoxItem(items); item != none; item = MapListBoxItem(item.next)) {
+    if (item.itemID == itemID) {
+      return item;
+    }
+  }
 
-	// Item not found, return none.
-	return none;
+  // Item not found, return none.
+  return none;
 }
 
 
@@ -89,9 +89,9 @@ function MapListBoxItem getItemByID(int itemID) {
  *
  **************************************************************************************************/
 function doubleClickItem(UWindowListBoxItem item) {
-	if (notifyWindow != none) {
-		notifyWindow.notify(self, DE_DoubleClick);
-	}
+  if (notifyWindow != none) {
+    notifyWindow.notify(self, DE_DoubleClick);
+  }
 }
 
 

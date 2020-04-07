@@ -1,7 +1,5 @@
 class VoteBox extends UWindowListBox;
 
-
-
 /***************************************************************************************************
  *
  *  $DESCRIPTION  Renders the specified listbox item.
@@ -16,22 +14,22 @@ class VoteBox extends UWindowListBox;
  *
  **************************************************************************************************/
 function drawItem(Canvas c, UWindowList item, float x, float y, float w, float h) {
-	local int offsetX;
-	local texture flagTex;
-	local color backgroundColor;
-	
-	if(VoteBoxItem(item).bSelected) {
-		c.drawColor.r = 0;
-		c.drawColor.g = 0;
-		c.drawColor.b = 128;
-		drawStretchedTexture(c, x, y, w, h - 1, Texture'WhiteTexture');
-		c.drawColor.r = 255;
-		c.drawColor.g = 255;
-		c.drawColor.b = 255;
-	} else {
+  local int offsetX;
+  local texture flagTex;
+  local color backgroundColor;
+  
+  if(VoteBoxItem(item).bSelected) {
     c.drawColor.r = 0;
-  	c.drawColor.g = 0;
-  	c.drawColor.b = 0;
+    c.drawColor.g = 0;
+    c.drawColor.b = 128;
+    drawStretchedTexture(c, x, y, w, h - 1, Texture'WhiteTexture');
+    c.drawColor.r = 255;
+    c.drawColor.g = 255;
+    c.drawColor.b = 255;
+  } else {
+    c.drawColor.r = 0;
+    c.drawColor.g = 0;
+    c.drawColor.b = 0;
   }
 
   c.font = root.fonts[F_Bold];
@@ -40,15 +38,14 @@ function drawItem(Canvas c, UWindowList item, float x, float y, float w, float h
   offsetX = 24;
   clipText(c, x + offsetX, y, getRank(VoteBoxItem(item)));
   
-	// Votes.
-	offsetX += 64;
-	clipText(c, x + offsetX, y, getVoteCount(VoteBoxItem(item)));
+  // Votes.
+  offsetX += 64;
+  clipText(c, x + offsetX, y, getVoteCount(VoteBoxItem(item)));
 
-	// Draw mapname.
-	offsetX += 92;
-	clipText(c, x + offsetX, y, getMapName(VoteBoxItem(item)));
+  // Draw mapname.
+  offsetX += 92;
+  clipText(c, x + offsetX, y, getMapName(VoteBoxItem(item)));
 }
-
 
 /***************************************************************************************************
  *
@@ -59,11 +56,10 @@ function drawItem(Canvas c, UWindowList item, float x, float y, float w, float h
  *
  **************************************************************************************************/
 function doubleClickItem(UWindowListBoxItem item) {
-	if (notifyWindow != none) {
-		notifyWindow.notify(self, DE_DoubleClick);
-	}
+  if (notifyWindow != none) {
+    notifyWindow.notify(self, DE_DoubleClick);
+  }
 }
-
 
 /***************************************************************************************************
  *
@@ -74,7 +70,7 @@ function doubleClickItem(UWindowListBoxItem item) {
  *
  **************************************************************************************************/
 function int getVoteCount(VoteBoxItem item) {
-	return item.VoteCount;
+  return item.VoteCount;
 }
 
 /***************************************************************************************************
@@ -86,7 +82,7 @@ function int getVoteCount(VoteBoxItem item) {
  *
  **************************************************************************************************/
 function string getMapName(VoteBoxItem item) {
-	return item.MapName;
+  return item.MapName;
 }
 
 /***************************************************************************************************
@@ -98,7 +94,7 @@ function string getMapName(VoteBoxItem item) {
  *
  **************************************************************************************************/
 function int getRank(VoteBoxItem item) {
-	return item.rank;
+  return item.rank;
 }
 
 /***************************************************************************************************
@@ -109,7 +105,7 @@ function int getRank(VoteBoxItem item) {
  *
  **************************************************************************************************/
 function VoteBoxItem addVote() {
-	return VoteBoxItem(items.append(listClass));
+  return VoteBoxItem(items.append(listClass));
 }
 
 
@@ -123,17 +119,15 @@ function VoteBoxItem addVote() {
  *
  **************************************************************************************************/
 function removeVote(string map) {
-	local VoteBoxItem item;
+  local VoteBoxItem item;
 
-	// Search for map.
-	for (item = VoteBoxItem(items); item != none; item = VoteBoxItem(item.next)) {
-		if (item.MapName == map) {
-			item.remove();
-		}
-	}
+  // Search for map.
+  for (item = VoteBoxItem(items); item != none; item = VoteBoxItem(item.next)) {
+    if (item.MapName == map) {
+      item.remove();
+    }
+  }
 }
-
-
 
 /***************************************************************************************************
  *
@@ -144,19 +138,18 @@ function removeVote(string map) {
  *
  **************************************************************************************************/
 function VoteBoxItem getMap(string map) {
-	local VoteBoxItem item;
+  local VoteBoxItem item;
 
-	// Search for item.
-	for (item = VoteBoxItem(items); item != none; item = VoteBoxItem(item.next)) {
-		if (item.MapName == map) {
-			return item;
-		}
-	}
+  // Search for item.
+  for (item = VoteBoxItem(items); item != none; item = VoteBoxItem(item.next)) {
+    if (item.MapName == map) {
+      return item;
+    }
+  }
 
-	// Player not found, return none.
-	return none;
+  // Player not found, return none.
+  return none;
 }
-
 
 function SelectMap(string MapName) {
   local VoteBoxItem MapItem;
@@ -172,13 +165,11 @@ function SelectMap(string MapName) {
    }
 }
 
-
 /***************************************************************************************************
  *
  *  $DESCRIPTION  Default properties block.
  *
  **************************************************************************************************/
-
 defaultproperties
 {
      ListClass=Class'VoteBoxItem'

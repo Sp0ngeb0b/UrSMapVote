@@ -48,11 +48,15 @@ simulated function setupControlPanel() {
 
   mapvoteTab = UrSMapVoteTab(client.mainWindow.mainPanel.addPanel("Map Vote", class'UrSMapVoteTab'));
   
-  // Add control panel tabs.
+  // Add config panel tab.
   if (client.hasRight(client.R_ServerAdmin)) {
     client.addPluginConfigPanel(class'UrSMapVoteSettings');
   }
   
+  // Add mapsettings tab.
+  if (client.hasRight("mapsettings")) {
+    client.mainWindow.mainPanel.addPanel("Map Settings", class'UrSMapSettingsConfigTab', , "server,serversettings");
+  }
 }
 
 /***************************************************************************************************
