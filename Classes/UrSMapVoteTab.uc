@@ -396,7 +396,6 @@ function notify(UWindowDialogControl control, byte eventType) {
   // MapList DoubleClicked?
   if(control == maplist && eventType == DE_DoubleClick) {
     if (mapList.selectedItem == none || MapListBoxItem(mapList.selectedItem).displayText == "") {
-      // xClient.client.showMsg("<C00>You have to select a map first!");
       return;
     }
     
@@ -407,7 +406,6 @@ function notify(UWindowDialogControl control, byte eventType) {
   // ResultBox DoubleClicked?
   if(control == ResultBox && eventType == DE_DoubleClick) {
     if (ResultBox.selectedItem == none || ResultBox.getMapName(VoteBoxItem(ResultBox.SelectedItem)) == "") {
-      // xClient.client.showMsg("<C00>You have to select a map first!");
       return;
     }
 
@@ -423,7 +421,6 @@ function notify(UWindowDialogControl control, byte eventType) {
 			case VoteButton:
       if (mapList.selectedItem == none && ResultBox.selectedItem == none  ||
           mapList.selectedItem != none && MapListBoxItem(mapList.selectedItem).displayText == "") {
-       //  xClient.client.showMsg("<C00>You have to select a map!");
         return;
       }
       if (mapList.selectedItem != none) mapname = MapListBoxItem(mapList.selectedItem).displayText;

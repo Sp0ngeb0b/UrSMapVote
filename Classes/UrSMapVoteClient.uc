@@ -23,22 +23,20 @@ const tipAnimationTimeIn    = 2.0;
 const tipAnimationTimeOut   = 0.5;
 const tipAnimationTimePause = 1.0;
 
-
 /***************************************************************************************************
  *
  *  $DESCRIPTION  Replication block.
  *
  **************************************************************************************************/
 replication {
-	reliable if (role == ROLE_Authority) // Replicate to client...
-		// Variables.
-		delayTime, TimeLeft, bGameEnded,
+  reliable if (role == ROLE_Authority) // Replicate to client...
+    // Variables.
+    delayTime, TimeLeft, bGameEnded,
 
-		// Functions.
+    // Functions.
     openMapvote, updateVoteBox, clearList,
     closeVotewindow;
 }
-
 
 /***************************************************************************************************
  *
@@ -48,16 +46,14 @@ replication {
  **************************************************************************************************/
 simulated function setupControlPanel() {
 
-	mapvoteTab = UrSMapVoteTab(client.mainWindow.mainPanel.addPanel("Map Vote", class'UrSMapVoteTab'));
+  mapvoteTab = UrSMapVoteTab(client.mainWindow.mainPanel.addPanel("Map Vote", class'UrSMapVoteTab'));
   
   // Add control panel tabs.
-	if (client.hasRight(client.R_ServerAdmin)) {
-		client.addPluginConfigPanel(class'UrSMapVoteSettings');
+  if (client.hasRight(client.R_ServerAdmin)) {
+    client.addPluginConfigPanel(class'UrSMapVoteSettings');
   }
   
 }
-
-
 
 /***************************************************************************************************
  *
@@ -85,7 +81,7 @@ simulated function clientInitialized() {
 
   super.tick(delayTime);
   
-  if(role == ROLE_SimulatedProxy) {	
+  if(role == ROLE_SimulatedProxy) { 
     if(mapvoteTab != None && mapvoteTab.xConf != None) {
       if(mapvoteTab.bWindowVisible && client.mainWindow.bWindowVisible) {
         // Tips animation.
@@ -126,6 +122,11 @@ simulated function clientInitialized() {
   }
 }
 
+/***************************************************************************************************
+ *
+ *  $DESCRIPTION  Show next tip.
+ *
+ **************************************************************************************************/
 simulated function nextTip() {
   currentTip++;
   if(currentTip >= mapvoteTab.xConf.getArraySize("infoTips") || mapvoteTab.xConf.getString("infoTips",currentTip) == "") currentTip = 0;
@@ -162,11 +163,11 @@ function timer() {
 simulated function modifyServerState(out name stateType, out string text, out Color textColor,
                                      out Texture icon, out Texture solidIcon, out byte bBlink) {
 
-	if (bGameEnded && delaytime == 0) {
-		icon      = Texture'VoteIcon';
-		solidIcon = Texture'VoteIcon2';
-		stateType = SS_Vote;
-		if (TimeLeft > 0) {
+  if (bGameEnded && delaytime == 0) {
+    icon      = Texture'VoteIcon';
+    solidIcon = Texture'VoteIcon2';
+    stateType = SS_Vote;
+    if (TimeLeft > 0) {
       text   = "Vote ("$TimeLeft$")";
       textColor = client.nscHUD.colors[client.nscHUD.C_Yellow];
       bBlink = 1;
@@ -176,9 +177,8 @@ simulated function modifyServerState(out name stateType, out string text, out Co
       textColor = client.nscHUD.colors[client.nscHUD.C_Yellow];
       bBlink = 0;
     }
-	}
+  }
 }
-
 
 /***************************************************************************************************
  *
@@ -187,16 +187,15 @@ simulated function modifyServerState(out name stateType, out string text, out Co
  **************************************************************************************************/
 simulated function openMapvote() {
 
-	// Get mapvote tab.
-	mapVoteTab = UrSMapVoteTab(client.mainWindow.mainPanel.getPanel(class'UrSMapVoteTab'.default.panelIdentifier));
-	if (mapVoteTab == none) {
+  // Get mapvote tab.
+  mapVoteTab = UrSMapVoteTab(client.mainWindow.mainPanel.getPanel(class'UrSMapVoteTab'.default.panelIdentifier));
+  if (mapVoteTab == none) {
     return;
-	}
+  }
 
-	// Show the tab.
-	client.showPanel(class'UrSMapVoteTab'.default.panelIdentifier);
+  // Show the tab.
+  client.showPanel(class'UrSMapVoteTab'.default.panelIdentifier);
 }
-
 
 /***************************************************************************************************
  *
@@ -211,7 +210,6 @@ simulated function updateVoteBox(int Votes, string mapname, int rank) {
   mapVoteTab.updateVoteBox(Votes, mapname, rank);
 }
 
-
 /***************************************************************************************************
  *
  *  $DESCRIPTION  Clear all existing entries in the VoteList.
@@ -222,7 +220,6 @@ simulated function clearList() {
   if (mapVoteTab == none) return;
   mapVoteTab.clearResults();
 }
-
 
 /***************************************************************************************************
  *
@@ -249,36 +246,36 @@ simulated function closeVotewindow() {
  *
  **************************************************************************************************/
 simulated function setVar(string dataContainerID, string varName, coerce string value, optional int index) {
-	local NexgenSharedDataContainer dataContainer;
-	local string oldValue;
-	local string newValue;
+  local NexgenSharedDataContainer dataContainer;
+  local string oldValue;
+  local string newValue;
 
-	// Get data container.
-	dataContainer = dataSyncMgr.getDataContainer(dataContainerID);
+  // Get data container.
+  dataContainer = dataSyncMgr.getDataContainer(dataContainerID);
 
-	// Check if variable can be updated.
-	if (dataContainer == none || !dataContainer.mayWrite(self, varName)) return;
+  // Check if variable can be updated.
+  if (dataContainer == none || !dataContainer.mayWrite(self, varName)) return;
 
-	// Update variable value.
-	oldValue = dataContainer.getString(varName, index);
-	dataContainer.set(varName, value, index);
-	newValue = dataContainer.getString(varName, index);
+  // Update variable value.
+  oldValue = dataContainer.getString(varName, index);
+  dataContainer.set(varName, value, index);
+  newValue = dataContainer.getString(varName, index);
 
-	// Send new value to server.
-	if (newValue != oldValue) {
-		if (dataContainer.isArray(varName)) {
-			sendStr(CMD_SYNC_PREFIX @ CMD_UPDATE_VAR
-			        @ class'UrSMapVoteMain'.static.formatCmdArgFixed(dataContainerID)
-			        @ class'UrSMapVoteMain'.static.formatCmdArgFixed(varName)
-			        @ index
-			        @ class'UrSMapVoteMain'.static.formatCmdArgFixed(newValue));
-		} else {
-			sendStr(CMD_SYNC_PREFIX @ CMD_UPDATE_VAR
-			        @ class'UrSMapVoteMain'.static.formatCmdArgFixed(dataContainerID)
-			        @ class'UrSMapVoteMain'.static.formatCmdArgFixed(varName)
-			        @ class'UrSMapVoteMain'.static.formatCmdArgFixed(newValue));
-		}
-	}
+  // Send new value to server.
+  if (newValue != oldValue) {
+    if (dataContainer.isArray(varName)) {
+      sendStr(CMD_SYNC_PREFIX @ CMD_UPDATE_VAR
+              @ class'UrSMapVoteMain'.static.formatCmdArgFixed(dataContainerID)
+              @ class'UrSMapVoteMain'.static.formatCmdArgFixed(varName)
+              @ index
+              @ class'UrSMapVoteMain'.static.formatCmdArgFixed(newValue));
+    } else {
+      sendStr(CMD_SYNC_PREFIX @ CMD_UPDATE_VAR
+              @ class'UrSMapVoteMain'.static.formatCmdArgFixed(dataContainerID)
+              @ class'UrSMapVoteMain'.static.formatCmdArgFixed(varName)
+              @ class'UrSMapVoteMain'.static.formatCmdArgFixed(newValue));
+    }
+  }
 }
 
 /***************************************************************************************************
@@ -293,27 +290,27 @@ simulated function setVar(string dataContainerID, string varName, coerce string 
  *
  **************************************************************************************************/
 simulated function exec_UPDATE_VAR(string args[10], int argCount) {
-	local int varIndex;
-	local string varName;
-	local string varValue;
-	local NexgenSharedDataContainer container;
-	local int index;
+  local int varIndex;
+  local string varName;
+  local string varValue;
+  local NexgenSharedDataContainer container;
+  local int index;
 
-	// Get arguments.
-	if (argCount == 3) {
-		varName = args[1];
-		varValue = args[2];
-	} else if (argCount == 4) {
-		varName = args[1];
-		varIndex = int(args[2]);
-		varValue = args[3];
-	} else {
-		return;
-	}
+  // Get arguments.
+  if (argCount == 3) {
+    varName = args[1];
+    varValue = args[2];
+  } else if (argCount == 4) {
+    varName = args[1];
+    varIndex = int(args[2]);
+    varValue = args[3];
+  } else {
+    return;
+  }
 
-	if (role == ROLE_Authority) {
-  	// Server side, call fixed set() function
-  	UrSMapVoteMain(xControl).setFixed(args[0], varName, varValue, varIndex, self);
+  if (role == ROLE_Authority) {
+    // Server side, call fixed set() function
+    UrSMapVoteMain(xControl).setFixed(args[0], varName, varValue, varIndex, self);
   } else {
 
     // Client Side
@@ -321,15 +318,15 @@ simulated function exec_UPDATE_VAR(string args[10], int argCount) {
 
     container = dataSyncMgr.getDataContainer(args[0]);
 
-		// Signal event to client controllers.
-		for (index = 0; index < client.clientCtrlCount; index++) {
-			if (NexgenExtendedClientController(client.clientCtrl[index]) != none) {
-				NexgenExtendedClientController(client.clientCtrl[index]).varChanged(container, varName, varIndex);
-			}
-		}
+    // Signal event to client controllers.
+    for (index = 0; index < client.clientCtrlCount; index++) {
+      if (NexgenExtendedClientController(client.clientCtrl[index]) != none) {
+        NexgenExtendedClientController(client.clientCtrl[index]).varChanged(container, varName, varIndex);
+      }
+    }
 
-		// Signal event to GUI.
-		client.mainWindow.mainPanel.varChanged(container, varName, varIndex);
+    // Signal event to GUI.
+    client.mainWindow.mainPanel.varChanged(container, varName, varIndex);
   }
 }
 

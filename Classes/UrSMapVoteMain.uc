@@ -274,13 +274,13 @@ function virtualTimer() {
 
       if (delayTime == 0) {
         OpenVoteWindow();
-        BroadcastMessage("<C04>Vote for the next map!");
+        control.broadcastMsg("<C04>Vote for the next map!");
       }
     }
 
     // Start/Update Voting Countdown.
     if (delayTime < 1 && TimeLeft > 0) {
-      if (TimeLeft == UrSMapVoteConfig(xConf).votelimit) BroadcastMessage("<C04>"$TimeLeft$" seconds left to vote.");
+      if (TimeLeft == UrSMapVoteConfig(xConf).votelimit) control.broadcastMsg("<C04>"$TimeLeft$" seconds left to vote.");
       TimeLeft--;
 
       for (client = control.clientList; client != none; client = client.nextClient) {
@@ -290,7 +290,7 @@ function virtualTimer() {
 	    	xclient.bGameEnded = bGameEnded;
   	  }
 
-      if(TimeLeft == 10) BroadcastMessage("<C04>10 seconds left to vote.");
+      if(TimeLeft == 10) control.broadcastMsg("<C04>10 seconds left to vote.");
 
       // Countdown Voice Announcer.
 	    if(TimeLeft < 11 && TimeLeft > 0 ) {
@@ -406,7 +406,7 @@ function TallyVotes(bool bForceMapSwitch) {
    }
 
    if(!Level.Game.bGameEnded && !bMidGameVote && (float(PlayersThatVoted) / float(Level.Game.NumPlayers)) * 100 >= UrSMapVoteConfig(xConf).MidGameVotePercent) {
-      if(Level.Game.NumPlayers>2) BroadcastMessage("<C04>Mid-game mapvoting:"@UrSMapVoteConfig(xConf).MidGameVotePercent$"% of the players want to change the map!");
+      if(Level.Game.NumPlayers>2) control.broadcastMsg("<C04>Mid-game mapvoting:"@UrSMapVoteConfig(xConf).MidGameVotePercent$"% of the players want to change the map!");
       bMidGameVote = true;
       TimeLeft = UrSMapVoteConfig(xConf).votelimit;
       delayTime = 1;
@@ -467,7 +467,7 @@ function TallyVotes(bool bForceMapSwitch) {
      if(PlayersThatVoted == 0) {
        topmap = Rand(MapCount) + 1;
        while(Left(maplist[topmap],3) == "[X]") topmap = Rand(MapCount) + 1;
-       BroadcastMessage("<C04>Noone voted. Choosing random map file ..");
+       control.broadcastMsg("<C04>Noone voted. Choosing random map file ..");
      }
    }
 
@@ -477,7 +477,7 @@ function TallyVotes(bool bForceMapSwitch) {
       winmap = maplist[topmap];
       i = InStr(Caps(winmap), ".UNR");
       if(i != -1) winmap = Left(winmap, i);
-      BroadcastMessage("<C04>"$winmap $ " has won.");
+      control.broadcastMsg("<C04>"$winmap $ " has won.");
 
       CloseVoteWindows();
       bLevelSwitchPending = true;
@@ -489,7 +489,6 @@ function TallyVotes(bool bForceMapSwitch) {
    }
 
 }
-
 
 /***************************************************************************************************
  *
@@ -509,7 +508,6 @@ function updateRepeatList(string mapname) {
 
   for(x=0; x < UrSMapVoteConfig(xConf).RepeatLimit+1; x++) {
     if (x == UrSMapVoteConfig(xConf).RepeatLimit) {
-      log ("NEXGENVOTESYSTEM: End reached. New 0 entry is:"@mapname);
       UrSMapVoteConfig(xConf).votedMaps[0] = mapname;
       UrSMapVoteConfig(xConf).saveconfig();
       return;
@@ -537,8 +535,6 @@ function CloseVoteWindows() {
   }
 }
 
-
-
 /***************************************************************************************************
  *
  *  $DESCRIPTION  Handles a given vote.
@@ -546,54 +542,59 @@ function CloseVoteWindows() {
  *  $Param  Voter   The Voter.
  *
  **************************************************************************************************/
-function SubmitVote(string MapName,Actor Voter)
-{
-   local int PlayerIndex,x,MapIndex,i;
+function SubmitVote(string MapName, Actor Voter) {
+  local NexgenClient client;
+  local int PlayerIndex,x,MapIndex,i;
+  
+  client = control.getClient(Voter);
+  
+  if(client == none) return;
 
+  // Check voter
+  if(client.bSpectator) {
+    client.showMsg("<C00>Spectators are not allowed to vote.");
+    return;
+  }
+  
+  // Check if vote has already ended
+  if(bLevelSwitchPending || Left(MapName,3) == "[X]") return;
 
-   // Check voter
-   if(Voter.IsA('Spectator')) Pawn(Voter).ClientMessage("<C00>Spectators are not allowed to vote.");
-
-
-   // Check if vote has already ended
-	 if(bLevelSwitchPending || Voter.IsA('Spectator') || Left(MapName,3) == "[X]") return;
-
-   // Check if map has been marked out
-   for(x=0; x < UrSMapVoteConfig(xConf).RepeatLimit; x++) {
+  // Check if map has been marked out
+  for(x=0; x < UrSMapVoteConfig(xConf).RepeatLimit; x++) {
     if(UrSMapVoteConfig(xConf).votedMaps[x] == MapName) {
-      Pawn(Voter).ClientMessage("<C00>You can not vote for this map.");
+      client.showMsg("<C00>You can not vote for this map.");
       return;
     }
-   }
+  }
 
-   // Check if the voter is a valid player.
-   PlayerIndex = FindPlayerIndex(PlayerPawn(Voter).PlayerReplicationInfo.PlayerID);
-   if(PlayerIndex == -1) return;
+  // Check if the voter is a valid player.
+  PlayerIndex = FindPlayerIndex(client.player.PlayerReplicationInfo.PlayerID);
+  if(PlayerIndex == -1) return;
 
-   // Check if voted map is in the maplist
-   for(x=1; x<=MapCount; x++) {
+  // Check if voted map is in the maplist
+  for(x=1; x<=MapCount; x++) {
     if(maplist[x] == MapName) {
       MapIndex = x;
       break;
     }
-   }
+  }
 
-   // Invalid map, vote doesn't count!
-   if(MapIndex == 0) return;
+  // Invalid map, vote doesn't count!
+  if(MapIndex == 0) return;
 
-   // Check if player has already voted for this map
-   if(PlayerVote[PlayerIndex] == MapIndex) return;
+  // Check if player has already voted for this map
+  if(PlayerVote[PlayerIndex] == MapIndex) return;
 
-   // Register vote
-   PlayerVote[PlayerIndex] = MapIndex;
+  // Register vote
+  PlayerVote[PlayerIndex] = MapIndex;
 
-   // Inform about vote.
-   i = InStr(Caps(MapName), ".UNR");
-   if(i != -1) MapName = Left(MapName, i);
-   BroadcastMessage(PlayerPawn(Voter).PlayerReplicationInfo.PlayerName $ " voted for " $ MapName $".");
+  // Inform about vote.
+  i = InStr(Caps(MapName), ".UNR");
+  if(i != -1) MapName = Left(MapName, i);
+  control.broadcastMsg(client.playerName $ " voted for " $ MapName $".");
 
-   // Call main handler.
-   TallyVotes(false);
+  // Call main handler.
+  TallyVotes(false);
 }
 
 
