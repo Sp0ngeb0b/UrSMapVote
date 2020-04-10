@@ -1,5 +1,10 @@
 class VoteBox extends UWindowListBox;
 
+var bool bShowScreenshot;
+var bool bResize;
+
+const screenShotDimensionBase = 40; 
+
 /***************************************************************************************************
  *
  *  $DESCRIPTION  Renders the specified listbox item.
@@ -14,15 +19,32 @@ class VoteBox extends UWindowListBox;
  *
  **************************************************************************************************/
 function drawItem(Canvas c, UWindowList item, float x, float y, float w, float h) {
-  local int offsetX;
+  local int offsetX, offsetY;
+  local float textSizeX, textSizeY;
   local texture flagTex;
   local color backgroundColor;
+  local VoteBoxItem xItem;
+  local int screenShotDimension;
+
+  xItem = VoteBoxItem(item);
   
-  if(VoteBoxItem(item).bSelected) {
+  // Font  
+  if(bResize) c.font = root.fonts[F_LargeBold];
+  else        c.font = root.fonts[F_Bold];
+  
+  if(bShowScreenshot) {
+    if(bResize) screenShotDimension = 128;
+    else screenShotDimension = screenShotDimensionBase;
+    ItemHeight=screenShotDimension+2;
+    c.StrLen("TEST", textSizeX, textSizeY);
+    offsetY = screenShotDimension/2 - textSizeY/2;
+  }
+  
+  if(xItem.bSelected) {
     c.drawColor.r = 0;
     c.drawColor.g = 0;
     c.drawColor.b = 128;
-    drawStretchedTexture(c, x, y, w, h - 1, Texture'WhiteTexture');
+    drawStretchedTexture(c, x, y, w - screenShotDimension - 4, h - 2, Texture'WhiteTexture');
     c.drawColor.r = 255;
     c.drawColor.g = 255;
     c.drawColor.b = 255;
@@ -31,20 +53,26 @@ function drawItem(Canvas c, UWindowList item, float x, float y, float w, float h
     c.drawColor.g = 0;
     c.drawColor.b = 0;
   }
-
-  c.font = root.fonts[F_Bold];
   
-  // Rank
+  // rank
   offsetX = 24;
-  clipText(c, x + offsetX, y, getRank(VoteBoxItem(item)));
+  clipText(c, x + offsetX, y+offsetY, xItem.rank);
   
   // Votes.
   offsetX += 64;
-  clipText(c, x + offsetX, y, getVoteCount(VoteBoxItem(item)));
+  clipText(c, x + offsetX, y+offsetY, xItem.voteCount);
 
-  // Draw mapname.
-  offsetX += 92;
-  clipText(c, x + offsetX, y, getMapName(VoteBoxItem(item)));
+  // Draw mapName.
+  offsetX += 64;
+  clipText(c, x + offsetX, y+offsetY, getMapName(xItem));
+    
+  // Screenshot.
+  if(bShowScreenshot) {
+    c.drawColor.r = 255;
+    c.drawColor.g = 255;
+    c.drawColor.b = 255;        
+    if(xItem.mapShot != none) DrawStretchedTexture(c, w - screenShotDimension - 2, y, screenShotDimension, screenShotDimension, xItem.mapShot);
+  }
 }
 
 /***************************************************************************************************
@@ -69,94 +97,16 @@ function doubleClickItem(UWindowListBoxItem item) {
  *  $RETURN       The text that should be displayed for the specified item in the listbox.
  *
  **************************************************************************************************/
-function int getVoteCount(VoteBoxItem item) {
-  return item.VoteCount;
-}
-
-/***************************************************************************************************
- *
- *  $DESCRIPTION  Returns the text displayed for a list item.
- *  $PARAM        item  The item for which its display text has to be determined.
- *  $REQUIRE      item != none
- *  $RETURN       The text that should be displayed for the specified item in the listbox.
- *
- **************************************************************************************************/
 function string getMapName(VoteBoxItem item) {
-  return item.MapName;
+  return item.mapName;
 }
 
-/***************************************************************************************************
- *
- *  $DESCRIPTION  Returns the text displayed for a list item.
- *  $PARAM        item  The item for which its display text has to be determined.
- *  $REQUIRE      item != none
- *  $RETURN       The text that should be displayed for the specified item in the listbox.
- *
- **************************************************************************************************/
-function int getRank(VoteBoxItem item) {
-  return item.rank;
-}
-
-/***************************************************************************************************
- *
- *  $DESCRIPTION  Adds a new player to the list.
- *  $RETURN       The player item that was added to the list.
- *  $ENSURE       result != none
- *
- **************************************************************************************************/
-function VoteBoxItem addVote() {
-  return VoteBoxItem(items.append(listClass));
-}
-
-
-
-/***************************************************************************************************
- *
- *  $DESCRIPTION  Removes the player with the specified player code from the list.
- *  $PARAM        playerNum  The player to remove.
- *  $REQUIRE      playerNum >= 0
- *  $ENSURE       getPlayer(playerNum) == none
- *
- **************************************************************************************************/
-function removeVote(string map) {
-  local VoteBoxItem item;
-
-  // Search for map.
-  for (item = VoteBoxItem(items); item != none; item = VoteBoxItem(item.next)) {
-    if (item.MapName == map) {
-      item.remove();
-    }
-  }
-}
-
-/***************************************************************************************************
- *
- *  $DESCRIPTION  Returns the item with the given mapname.
- *  $PARAM        map  Mapname of the searched item.
- *  $REQUIRE      item != none
- *  $RETURN       The item with the specified mapname.
- *
- **************************************************************************************************/
-function VoteBoxItem getMap(string map) {
-  local VoteBoxItem item;
-
-  // Search for item.
-  for (item = VoteBoxItem(items); item != none; item = VoteBoxItem(item.next)) {
-    if (item.MapName == map) {
-      return item;
-    }
-  }
-
-  // Player not found, return none.
-  return none;
-}
-
-function SelectMap(string MapName) {
+function selectMap(string mapName) {
   local VoteBoxItem MapItem;
 
   for(MapItem=VoteBoxItem(Items); MapItem!=None; MapItem=VoteBoxItem(MapItem.Next) )
    {
-      if(MapName ~= MapItem.MapName)
+      if(mapName ~= MapItem.mapName)
       {
          SetSelectedItem(MapItem);
          MakeSelectedVisible();

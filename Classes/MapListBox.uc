@@ -1,5 +1,10 @@
 class MapListBox extends UWindowListBox;
 
+var bool bShowScreenshot;
+var bool bResize;
+
+const screenShotDimensionBase = 48;
+
 /***************************************************************************************************
  *
  *  $DESCRIPTION  Renders the specified listbox item.
@@ -14,14 +19,38 @@ class MapListBox extends UWindowListBox;
  *
  **************************************************************************************************/
 function drawItem(Canvas c, UWindowList item, float x, float y, float w, float h) {
-  local int offsetX;
+  local int offsetX, offsetY;
+  local float textHeightX, textHeightY;
+  local MapListBoxItem xItem;
+  local int screenShotDimension;
   
-  if(MapListBoxItem(item).bSelected) {
+  xItem = MapListBoxItem(item);
+  
+  // Font  
+  if(bResize) c.font = root.fonts[F_Large];
+  else        c.font = root.fonts[F_Normal];
+
+  // Screenshot
+  if(!xItem.bDummy && bShowScreenshot) {
+    c.drawColor.r = 255;
+    c.drawColor.g = 255;
+    c.drawColor.b = 255;        
+    screenShotDimension = screenShotDimensionBase*(1+int(bResize));
+    if(xItem.mapShot != none) DrawStretchedTexture(c, x + 2, y, screenShotDimension, screenShotDimension, xItem.mapShot);
+    offsetX += screenShotDimension + 4;
+    c.StrLen("TEST", textHeightX, textHeightY);
+    offsetY  = screenShotDimension/2 - textHeightY/2;
+    ItemHeight=screenShotDimension+2;
+  } else { 
+    ItemHeight=13.000000;
+  }
+
+  if(!xItem.bDummy && MapListBoxItem(item).bSelected) {
     if (MapListBoxItem(item).bMarked) {
       c.drawColor.r = 0;
       c.drawColor.g = 0;
       c.drawColor.b = 128;
-      drawStretchedTexture(c, x, y, w, h - 1, Texture'WhiteTexture');
+      drawStretchedTexture(c, x + offsetX, y, w - offsetX, h - 1, Texture'WhiteTexture');
       c.drawColor.r = 255;
       c.drawColor.g = 0;
       c.drawColor.b = 0;
@@ -29,7 +58,7 @@ function drawItem(Canvas c, UWindowList item, float x, float y, float w, float h
       c.drawColor.r = 0;
       c.drawColor.g = 0;
       c.drawColor.b = 128;
-      drawStretchedTexture(c, x, y, w, h - 1, Texture'WhiteTexture');
+      drawStretchedTexture(c, x + offsetX, y, w - offsetX, h - 1, Texture'WhiteTexture');
       c.drawColor.r = 255;
       c.drawColor.g = 255;
       c.drawColor.b = 255;
@@ -44,41 +73,8 @@ function drawItem(Canvas c, UWindowList item, float x, float y, float w, float h
     c.drawColor.b = 0;
   }
 
-  c.font = root.fonts[F_Normal];
-  
-  if(MapListBoxItem(item).voteCount > 0) {
-    clipText(c, x + 2, y, MapListBoxItem(item).displayText);
-    
-    offsetX = 128;
-    clipText(c, x + offsetX, y, MapListBoxItem(item).voteCount);
-  } else clipText(c, x + 2, y, MapListBoxItem(item).displayText);
+  clipText(c, x + offsetX + 4, y + offsetY, xItem.mapName);
 }
-
-
-
-/***************************************************************************************************
- *
- *  $DESCRIPTION  Retrieves the item with the specified id number.
- *  $PARAM        itemID  The id number of the item to return.
- *  $RETURN       The item that has the specified id number, or none if there is no item with the
- *                specified id number.
- *
- **************************************************************************************************/
-function MapListBoxItem getItemByID(int itemID) {
-  local MapListBoxItem item;
-
-  // Search for item.
-  for (item = MapListBoxItem(items); item != none; item = MapListBoxItem(item.next)) {
-    if (item.itemID == itemID) {
-      return item;
-    }
-  }
-
-  // Item not found, return none.
-  return none;
-}
-
-
 
 /***************************************************************************************************
  *
@@ -94,15 +90,34 @@ function doubleClickItem(UWindowListBoxItem item) {
   }
 }
 
+/***************************************************************************************************
+ *
+ *  $DESCRIPTION  Returns the item with the given mapName.
+ *  $PARAM        map  Mapname of the searched item.
+ *  $REQUIRE      item != none
+ *  $RETURN       The item with the specified mapName.
+ *
+ **************************************************************************************************/
+function MapItem getMap(string mapName) {
+  local MapItem item;
+
+  // Search for item.
+  for (item = MapItem(items); item != none; item = MapItem(item.next)) {
+    if (item.mapName == mapName) {
+      return item;
+    }
+  }
+
+  // Map not found, return none.
+  return none;
+}
 
 /***************************************************************************************************
  *
  *  $DESCRIPTION  Default properties block.
  *
  **************************************************************************************************/
-
 defaultproperties
 {
-     ItemHeight=13.000000
      ListClass=Class'MapListBoxItem'
 }

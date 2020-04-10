@@ -17,11 +17,25 @@ var byte currentTip;
 var float tipStartTime;
 var int tipLength;
 
+// Screenshot
+var Texture mapShot[1024];
+var int lastLoadedIndex;
+var bool bNewPanelStyle;
+var bool bNewPanelStyleResize;
+var bool bWindowSizeAdjusted;
+var bool bScreensLoaded;
+
 const SS_Vote = 'ssvote';               // Voting state
 
 const tipAnimationTimeIn    = 2.0;
 const tipAnimationTimeOut   = 0.5;
 const tipAnimationTimePause = 1.0;
+
+const loadsPerTick    = 1;
+const newWindowHeight = 720;
+const newWindowWidth  = 960;
+const SSTR_bNewPanelStyle = "MapVoteWindowLoadScreens";
+const SSTR_bResize        = "MapVoteWindowResize";
 
 /***************************************************************************************************
  *
@@ -46,6 +60,8 @@ replication {
  **************************************************************************************************/
 simulated function setupControlPanel() {
 
+  bNewPanelStyle = client.gc.get(SSTR_bNewPanelStyle, string(int(client.player.Level.EngineVersion) >= 469)) ~= "true"; 
+  bNewPanelStyleResize = bNewPanelStyle && client.gc.get(SSTR_bResize, string(client.mainWindow.root.GUIScale == 1.0)) ~= "true"; 
   mapvoteTab = UrSMapVoteTab(client.mainWindow.mainPanel.addPanel("Map Vote", class'UrSMapVoteTab'));
   
   // Add config panel tab.
@@ -72,6 +88,39 @@ simulated function clientInitialized() {
   if(!client.bSpectator && bGameEnded) openMapvote();
 }
 
+simulated function setWindowSize(float height, float width) {
+  local UWindowWindow mainPanelBar;
+  local float wLeft, wTop;
+  
+  if(client == none || client.mainWindow == none || client.mainWindow.mainPanel == none) return;
+
+  client.mainWindow.WinHeight = height;
+  client.mainWindow.WinWidth  = width;
+
+  client.mainWindow.mainPanel.WinHeight = client.mainWindow.WinHeight-16;
+  client.mainWindow.mainPanel.WinWidth  = client.mainWindow.WinWidth-4;
+  mainPanelBar = client.mainWindow.Root.FindChildWindow(class'NexgenMainPanelBar', True);
+  
+  if(mainPanelBar == none) return;
+  
+  mainPanelBar.WinTop   = client.mainWindow.mainPanel.winHeight - client.mainWindow.mainPanel.barHeight - 3;
+  mainPanelBar.WinWidth = client.mainWindow.mainPanel.winWidth;
+  mainPanelBar.bAlwaysOnTop = true;
+  mainPanelBar.BringToFront();
+  client.mainWindow.mainPanel.pages.WinHeight = client.mainWindow.mainPanel.WinHeight - client.mainWindow.mainPanel.barHeight - 3;
+  client.mainWindow.mainPanel.pages.WinWidth  = client.mainWindow.mainPanel.WinWidth;
+  
+  wLeft = fMax(0.0, (client.consoleWindow.root.winWidth  - width)  / 2.0);
+  wTop  = fMax(0.0, (client.consoleWindow.root.winHeight - height) / 2.0);
+  
+  client.mainWindow.WinLeft = wLeft;
+  client.mainWindow.WinTop  = wTop;
+}
+
+simulated function Texture getMapShot(int index) {
+  return mapShot[index];
+}
+
 /***************************************************************************************************
  *
  *  $DESCRIPTION  Serverside tick.
@@ -82,45 +131,72 @@ simulated function clientInitialized() {
   local float tipTime;
   local int charsToDisplay;
   local float tipAnimationTimeStay;
-
+  local string mapName;
+  local int i;
+  
   super.tick(delayTime);
   
   if(role == ROLE_SimulatedProxy) { 
-    if(mapvoteTab != None && mapvoteTab.xConf != None) {
+    if(mapvoteTab != None) {
       if(mapvoteTab.bWindowVisible && client.mainWindow.bWindowVisible) {
-        // Tips animation.
-        if(!bCyclingThroughTips) {
-          // Start animation
-          tipStartTime = Level.TimeSeconds;
-          tipLength = Len(mapvoteTab.xConf.getString("infoTips" ,currentTip));
-          bCyclingThroughTips = true;
-        } else {
-          tipTime = Level.TimeSeconds-tipStartTime; 
-          tipAnimationTimeStay = mapvoteTab.xConf.getFloat("tipDuration");
-          if(tipTime > tipAnimationTimeIn) {
-            if(tipTime > tipAnimationTimeIn+tipAnimationTimeStay) {
-              if(tipTime > tipAnimationTimeIn+tipAnimationTimeStay+tipAnimationTimeOut) {
-                if(tipTime > tipAnimationTimeIn+tipAnimationTimeStay+tipAnimationTimeOut+tipAnimationTimePause) {
-                  // Next entry.
-                  nextTip();
+        // Adjust size for new panel style
+        if(bNewPanelStyle && bNewPanelStyleResize && !bWindowSizeAdjusted) {
+          setWindowSize(newWindowHeight, newWindowWidth);
+          bWindowSizeAdjusted = true;
+        }
+        
+        if( mapvoteTab.xConf != None) {
+          // Initial Screenshot Loading
+          if(bNewPanelStyle && mapvoteTab.mapListData != None && !bScreensLoaded) {
+            for(i=lastLoadedIndex; i<mapVoteTab.mapListData.getArraySize("maps") && i<lastLoadedIndex+loadsPerTick; i++) {
+              mapName = mapVoteTab.mapListData.getString("maps", i);
+              if(mapName == "") {
+                bScreensLoaded = true;
+                mapVoteTab.loadMapList();
+              } else {
+                mapShot[i] = Texture(DynamicLoadObject(mapName$".Screenshot", class'Texture'));
+              }
+            }
+            lastLoadedIndex = i;
+          }      
+        
+          // Tips animation.
+          if(!bCyclingThroughTips) {
+            // Start animation
+            tipStartTime = Level.TimeSeconds;
+            tipLength = Len(mapvoteTab.xConf.getString("infoTips" ,currentTip));
+            bCyclingThroughTips = true;
+          } else {
+            tipTime = Level.TimeSeconds-tipStartTime; 
+            tipAnimationTimeStay = mapvoteTab.xConf.getFloat("tipDuration");
+            if(tipTime > tipAnimationTimeIn) {
+              if(tipTime > tipAnimationTimeIn+tipAnimationTimeStay) {
+                if(tipTime > tipAnimationTimeIn+tipAnimationTimeStay+tipAnimationTimeOut) {
+                  if(tipTime > tipAnimationTimeIn+tipAnimationTimeStay+tipAnimationTimeOut+tipAnimationTimePause) {
+                    // Next entry.
+                    nextTip();
+                  }
+                } else {
+                  // Out animation.
+                  charsToDisplay = tipLength*(1-(tipTime-tipAnimationTimeIn-tipAnimationTimeStay)/tipAnimationTimeOut);
                 }
               } else {
-                // Out animation.
-                charsToDisplay = tipLength*(1-(tipTime-tipAnimationTimeIn-tipAnimationTimeStay)/tipAnimationTimeOut);
+                // Display complete tip.
+                charsToDisplay = tipLength;
               }
             } else {
-              // Display complete tip.
-              charsToDisplay = tipLength;
+              // In animation.
+              charsToDisplay = tipLength*tipTime/tipAnimationTimeIn;
             }
-          } else {
-            // In animation.
-            charsToDisplay = tipLength*tipTime/tipAnimationTimeIn;
-          }
-          mapvoteTab.infoTipsLabel.setText(Left(mapvoteTab.xConf.getString("infoTips", currentTip), charsToDisplay));
-        }      
-      } else if(bCyclingThroughTips) {
-        // Reset.
-        nextTip();
+            mapvoteTab.infoTipsLabel.setText(Left(mapvoteTab.xConf.getString("infoTips", currentTip), charsToDisplay));
+          }     
+        }
+      } else {
+        if(bWindowSizeAdjusted) {
+          setWindowSize(class'NexgenMainFrame'.default.windowHeight, class'NexgenMainFrame'.default.windowWidth);
+          bWindowSizeAdjusted = false;
+        }
+        if(bCyclingThroughTips) nextTip();
       }
     }
   }
@@ -205,6 +281,11 @@ simulated function modifyServerState(out name stateType, out string text, out Co
  *
  **************************************************************************************************/
 simulated function openMapvote() {
+
+  if(!client.bInitialized) {
+    client.showMsg("<C00>Command requires initialization.");
+    return;
+  }
 
   // Get mapvote tab.
   mapVoteTab = UrSMapVoteTab(client.mainWindow.mainPanel.getPanel(class'UrSMapVoteTab'.default.panelIdentifier));

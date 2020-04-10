@@ -11,7 +11,6 @@ var MapListBox mapList;
 var VoteBox ResultBox;
 
 var string PrevSelectedMap;
-var bool bMapListAvailable;
 
 var UWindowSmallButton voteButton;
 
@@ -22,9 +21,15 @@ var UMenuLabelControl authorLabel;
 var UMenuLabelControl playersLabel;
 var NexgenImageControl LevelShot;
 var Texture Screenshot;
+var MapListBoxItem dummyItem;
 
 var UMenuLabelControl hintLabel;
 var Color tipColor;
+
+var UWindowCheckBox bNewPanelStyleInp;
+var UWindowCheckBox bEnlargeWindowInp;
+
+const levelShotDimensionBase = 96;
 
 /***************************************************************************************************
  *
@@ -36,13 +41,18 @@ function setContent() {
   local NexgenContentPanel p;
   local NexgenContentPanel pp;
   local int region;
-
+  
   xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
+  
+  if(xClient.bNewPanelStyleResize) {
+    winHeight = xClient.newWindowHeight - (class'NexgenMainFrame'.default.windowHeight-winHeight);
+    winWidth  = xClient.newWindowWidth;
+  }
 
   // Create layout & add components.
   createWindowRootRegion();
   splitRegionH(32, defaultComponentDist, , true);    
-  splitRegionV(192, defaultComponentDist);
+  splitRegionV(192*(1+int(xClient.bNewPanelStyleResize)), defaultComponentDist);
   
   // Tip label
   p = addContentPanel();
@@ -56,18 +66,18 @@ function setContent() {
   p.addLabel("Maplist", true, TA_Center);
   mapList = MapListBox(p.addListBox(class'MapListBox'));
 
-  splitRegionH(144, defaultComponentDist, , false);
+  splitRegionH(levelShotDimensionBase+20+levelShotDimensionBase*int(xClient.bNewPanelStyleResize), defaultComponentDist);
 
   // Level info.
   p = addContentPanel();
-  p.splitRegionV(136, defaultComponentDist);
+  p.splitRegionV(levelShotDimensionBase+12+levelShotDimensionBase*int(xClient.bNewPanelStyleResize), defaultComponentDist);
   pp = p.addContentPanel();
-  LevelShot = pp.addImageBox(, true, 128, 128);
+  LevelShot = pp.addImageBox(, true, levelShotDimensionBase*(1+int(xClient.bNewPanelStyleResize)), levelShotDimensionBase*(1+int(xClient.bNewPanelStyleResize)));
 
   p.splitRegionH(16);
   p.addLabel("Level Information", true, TA_Center);
   
-  p.splitRegionH(16);
+  p.splitRegionH(8);
   p.skipRegion();
   
   p.splitRegionH(20, defaultComponentDist, , true);     
@@ -88,18 +98,42 @@ function setContent() {
 
   splitRegionH(16);
   p = addContentPanel();
+  p.splitRegionV(24);
+  p.skipRegion();
   p.splitRegionV(64, defaultComponentDist);
-  p.addLabel("Rank", true, TA_Center);
+  p.addLabel("Rank", true, TA_Left);
   p.splitRegionV(64, defaultComponentDist);
-  p.addLabel("Votes", true, TA_Center);
-  p.addLabel("MapName", true, TA_Center);
+  p.addLabel("Votes", true, TA_Left);
+  p.addLabel("Map", true, TA_Left);
 
+  // Client config
+  splitRegionH(16, defaultComponentDist, , true);
   ResultBox = VoteBox(addListBox(class'VoteBox'));
+  splitRegionV(192, defaultComponentDist);
+  splitRegionV(32, defaultComponentDist, , true);
+  splitRegionV(32, defaultComponentDist, , true);
+
+  addLabel("Load Screenshots (v469 Style)", true, TA_Right);
+  bNewPanelStyleInp = addCheckBox(TA_Left);
+  
+  addLabel("Enlarge Window", true, TA_Right);
+  bEnlargeWindowInp = addCheckBox(TA_Left);
 
   // Configure components.
+  bNewPanelStyleInp.register(self);
+  bEnlargeWindowInp.register(self);
+  bNewPanelStyleInp.bChecked  = xClient.bNewPanelStyle;
+  bEnlargeWindowInp.bChecked  = xClient.bNewPanelStyleResize;
+  bEnlargeWindowInp.bDisabled = !xClient.bNewPanelStyle;
+  mapList.bShowScreenshot     = xClient.bNewPanelStyle;
+  mapList.bResize             = xClient.bNewPanelStyleResize;
+  ResultBox.bShowScreenshot   = xClient.bNewPanelStyle;
+  ResultBox.bResize           = xClient.bNewPanelStyleResize;
   infoTipsLabel.setFont(F_Bold);
-  voteButton.bDisabled = xClient.client.bSpectator;
-  loadMapList();
+  mapSelected();
+  dummyItem = MapListBoxItem(mapList.items.append(class'MapListBoxItem'));
+  dummyItem.bDummy = true;
+	dummyItem.mapName = "Receiving map list...";
 }
 
 /***************************************************************************************************
@@ -116,12 +150,6 @@ function loadMapList() {
   mapList.selectedItem = none;
   mapSelected();
 
-  // Check if the map list is available.
-  if (!bMapListAvailable || xConf == none) {
-    addMap("Receiving map list...");
-    return;
-  }
-  
   // Load the map list.
   index = 0;
   while (index < mapListData.getInt("numMaps")) {
@@ -129,7 +157,7 @@ function loadMapList() {
     
     // Add map?
     if (class'NexgenUtil'.static.isValidLevel(mapName)) {
-      addMap(mapName);
+      addMap(mapName, index);
     }
 
     // Continue with next map.
@@ -154,7 +182,7 @@ function mapSelected() {
     return;
   }
     
-  mapname = MapListBoxItem(mapList.selectedItem).displayText;
+  mapname = MapListBoxItem(mapList.selectedItem).mapName;
   
   if (resultbox.selectedItem != none) {
     resultbox.selectedItem.bSelected = false;
@@ -177,7 +205,7 @@ function resultboxselected() {
   local string mapname;
 
   VoteButton.bDisabled = resultbox.selectedItem == none || xClient.client.bSpectator;
-  if (mapList.selectedItem == none) {
+  if (ResultBox.selectedItem == none) {
     LevelShot.image = Texture'Botpack.miniammoledbase';
     return;
   }
@@ -228,6 +256,11 @@ function loadMapInfo(string mapname) {
   }  
 }
 
+function loadScreenshot(MapItem item, int index) {
+  item.mapShot = xClient.getMapShot(index);
+  if(item.mapShot == none) item.mapShot = Texture'NoShot';
+}
+
 /***************************************************************************************************
  *
  *  $DESCRIPTION  Adds a new map to the map list.
@@ -235,7 +268,7 @@ function loadMapInfo(string mapname) {
  *  $REQUIRE      mapName != ""
  *
  **************************************************************************************************/
-function string addMap(string mapName) {
+function string addMap(string mapName, int index) {
   local int i, x;
   local MapListBoxItem item;
   
@@ -255,7 +288,8 @@ function string addMap(string mapName) {
   
   i = InStr(Caps(MapName), ".UNR");
   if(i != -1) MapName = Left(MapName, i);
-  item.displayText = mapName;
+  item.mapName = mapName;
+  loadScreenshot(item, index);
 }
 
 /***************************************************************************************************
@@ -272,8 +306,10 @@ function dataContainerAvailable(NexgenSharedDataContainer container) {
 
   if (container.containerID == class'UrSMapVoteConfigDC'.default.containerID) {
     xConf = container;
-    if(mapListData != none) loadMapList();
-    
+    if(mapListData != none) {
+      if(xClient.bNewPanelStyle) dummyItem.mapName = "Loading screenshots ...";
+      else loadMapList();
+    }
     xClient.tipsAvailable();
     tipColor.R = xConf.getByte("tipColorR");
     tipColor.B = xConf.getByte("tipColorG");
@@ -283,8 +319,10 @@ function dataContainerAvailable(NexgenSharedDataContainer container) {
   }
   else if (container.containerID == "maplist") {
     mapListData = container;
-    bMapListAvailable = true;
-    if(xConf != none) loadMapList();
+    if(xConf != none) {
+      if(xClient.bNewPanelStyle) dummyItem.mapName = "Loading screenshots ...";
+      else loadMapList();
+    }
   }
 }
 
@@ -338,6 +376,7 @@ function clearResults() {
  *
  ***************************************************************************************************/
 function updateVoteBox(int Votes, string mapname, int rank) {
+  local MapItem mapItem;
   local VoteBoxItem item;
   local int i;
   
@@ -349,7 +388,9 @@ function updateVoteBox(int Votes, string mapname, int rank) {
   i = InStr(Caps(MapName), ".UNR");
   if(i != -1) MapName = Left(MapName, i);
   
-  item.MapName   = mapname;
+  mapItem = mapList.getMap(mapName);
+  if(mapItem != None) item.mapShot = mapItem.mapShot;
+	item.mapName = mapName;
   
   // See if we had selected this map
   if(PrevSelectedMap == MapName && mapList.selectedItem == none) {
@@ -387,12 +428,12 @@ function notify(UWindowDialogControl control, byte eventType) {
   
   // MapList DoubleClicked?
   if(control == maplist && eventType == DE_DoubleClick) {
-    if (mapList.selectedItem == none || MapListBoxItem(mapList.selectedItem).displayText == "") {
+    if (mapList.selectedItem == none || MapListBoxItem(mapList.selectedItem).mapName == "") {
       return;
     }
     
     mapSelected();
-    if(!xClient.client.bSpectator) xClient.client.player.consoleCommand("mutate BDBMAPVOTE MAP"@MapListBoxItem(mapList.selectedItem).displayText $".unr");
+    if(!xClient.client.bSpectator) xClient.client.player.consoleCommand("mutate BDBMAPVOTE MAP"@MapListBoxItem(mapList.selectedItem).mapName $".unr");
   }
   
   // ResultBox DoubleClicked?
@@ -412,15 +453,33 @@ function notify(UWindowDialogControl control, byte eventType) {
     switch (control) {
       case VoteButton:
       if (mapList.selectedItem == none && ResultBox.selectedItem == none  ||
-          mapList.selectedItem != none && MapListBoxItem(mapList.selectedItem).displayText == "") {
+          mapList.selectedItem != none && MapListBoxItem(mapList.selectedItem).mapName == "") {
         return;
       }
-      if (mapList.selectedItem != none) mapname = MapListBoxItem(mapList.selectedItem).displayText;
+      if (mapList.selectedItem != none) mapname = MapListBoxItem(mapList.selectedItem).mapName;
       else mapname = ResultBox.getMapName(VoteBoxItem(ResultBox.SelectedItem));
       
       xClient.client.player.consoleCommand("mutate BDBMAPVOTE MAP"@mapname $".unr");
       
     }
+  }
+  
+  // New panel style checkbox?
+  if(control == bNewPanelStyleInp && !bNewPanelStyleInp.bDisabled && eventType == DE_Click) {
+    client.gc.set(xClient.SSTR_bNewPanelStyle, string(bNewPanelStyleInp.bChecked));
+    client.gc.saveConfig();
+    client.showMsg("<C07>Changes will take effect after a reconnect.");
+    if(bNewPanelStyleInp.bChecked) {
+      bEnlargeWindowInp.bDisabled = false;
+      bEnlargeWindowInp.bChecked = client.gc.get(xClient.SSTR_bResize, string(client.mainWindow.root.GUIScale == 1.0)) ~= "true";
+    } else {
+      bEnlargeWindowInp.bDisabled = true;
+      bEnlargeWindowInp.bChecked = false;
+    }
+  } else if(control == bEnlargeWindowInp && !bEnlargeWindowInp.bDisabled && eventType == DE_Click) {
+    client.gc.set(xClient.SSTR_bResize, string(bEnlargeWindowInp.bChecked));
+    client.gc.saveConfig();
+    client.showMsg("<C07>Changes will take effect after a reconnect.");
   }
 }
 

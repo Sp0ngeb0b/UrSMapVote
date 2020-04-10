@@ -1,11 +1,7 @@
-class MapListBoxItem extends UWindowListBoxItem;
+class MapListBoxItem extends MapItem;
 
-var string displayText;
-var int itemID;
 var bool bMarked;
-var int voteCount;
-
-
+var bool bDummy;
 
 /***************************************************************************************************
  *
@@ -17,22 +13,11 @@ var int voteCount;
  *  $OVERRIDE
  *
  **************************************************************************************************/
-function int compare(UWindowList a, UWindowList b) {
-  if (MapListBoxItem(a).voteCount > 0 && MapListBoxItem(b).voteCount > 0) {
-    if (MapListBoxItem(a).voteCount < MapListBoxItem(b).voteCount) {
-      return 1;
-    } else {
-      return -1;
-    }
-  }
-  if (MapListBoxItem(a).displayText < MapListBoxItem(b).displayText) {
+ function int Compare(UWindowList T, UWindowList B) {
+   if(Caps(MapListBoxItem(T).mapName) < Caps(MapListBoxItem(B).mapName))
     return -1;
-  } else {
-    return 1;
-  }
+   return 1;
 }
-
-
 
 /***************************************************************************************************
  *
@@ -42,5 +27,4 @@ function int compare(UWindowList a, UWindowList b) {
 
 defaultproperties
 {
-     itemID=-1
 }
