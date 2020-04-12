@@ -5,10 +5,9 @@ class UrSMapVoteClient extends NexgenExtendedClientController;
 
 var UrSMapVoteTab mapvoteTab;
 
-var bool bNetWait;                      // Client is waiting for initial replication.
-
+// Control variables
 var int delayTime;
-var int TimeLeft;
+var int timeLeft;
 var bool bGameEnded;
 
 // Tips animation
@@ -45,7 +44,7 @@ const SSTR_bResize        = "MapVoteWindowResize";
 replication {
   reliable if (role == ROLE_Authority) // Replicate to client...
     // Variables.
-    delayTime, TimeLeft, bGameEnded,
+    delayTime, timeLeft, bGameEnded,
 
     // Functions.
     openMapvote, updateVoteBox, clearList,
@@ -60,6 +59,7 @@ replication {
  **************************************************************************************************/
 simulated function setupControlPanel() {
 
+  // Determine panel style and add it
   bNewPanelStyle = client.gc.get(SSTR_bNewPanelStyle, string(int(client.player.Level.EngineVersion) >= 469)) ~= "true"; 
   bNewPanelStyleResize = bNewPanelStyle && client.gc.get(SSTR_bResize, string(client.mainWindow.root.GUIScale == 1.0)) ~= "true"; 
   mapvoteTab = UrSMapVoteTab(client.mainWindow.mainPanel.addPanel("Map Vote", class'UrSMapVoteTab'));
@@ -88,6 +88,11 @@ simulated function clientInitialized() {
   if(!client.bSpectator && bGameEnded) openMapvote();
 }
 
+/***************************************************************************************************
+ *
+ *  $DESCRIPTION  Resizes the Nexgen Window (DAMN!)
+ *
+ **************************************************************************************************/
 simulated function setWindowSize(float height, float width) {
   local UWindowWindow mainPanelBar;
   local float wLeft, wTop;
@@ -117,6 +122,11 @@ simulated function setWindowSize(float height, float width) {
   client.mainWindow.WinTop  = wTop;
 }
 
+/***************************************************************************************************
+ *
+ *  $DESCRIPTION  Getter function to the respective map shot
+ *
+ **************************************************************************************************/
 simulated function Texture getMapShot(int index) {
   return mapShot[index];
 }
@@ -262,8 +272,8 @@ simulated function modifyServerState(out name stateType, out string text, out Co
     icon      = Texture'VoteIcon';
     solidIcon = Texture'VoteIcon2';
     stateType = SS_Vote;
-    if (TimeLeft > 0) {
-      text   = "Vote ("$TimeLeft$")";
+    if (timeLeft > 0) {
+      text   = "Vote ("$timeLeft$")";
       textColor = client.nscHUD.colors[client.nscHUD.C_Yellow];
       bBlink = 1;
     }
@@ -303,11 +313,11 @@ simulated function openMapvote() {
  *
  *
  **************************************************************************************************/
-simulated function updateVoteBox(int Votes, string mapname, int rank) {
+simulated function updateVoteBox(int Votes, string mapName, int rank) {
 
   if (mapVoteTab == none) return;
 
-  mapVoteTab.updateVoteBox(Votes, mapname, rank);
+  mapVoteTab.updateVoteBox(Votes, mapName, rank);
 }
 
 /***************************************************************************************************
@@ -435,7 +445,6 @@ simulated function exec_UPDATE_VAR(string args[10], int argCount) {
  *  $DESCRIPTION  Default properties block.
  *
  **************************************************************************************************/
-
 defaultproperties
 {
      ctrlID="UrSMapVoteClient"

@@ -149,7 +149,7 @@ function int getTeamScore(int index) {
 
   data = xConf.getString("mapSettings", index);
 
-  // Remove Mapname
+  // Remove mapName
   data = mid(data, InStr(data, seperator)+Len(seperator));
 
   return int(Left(Data, InStr(data, seperator)));
@@ -160,7 +160,7 @@ function int getTimeLimit(int index) {
 
   data = xConf.getString("mapSettings", index);
 
-  // Remove Mapname and TeamScore
+  // Remove mapName and TeamScore
   data = mid(data, InStr(data, seperator)+Len(seperator));
   data = mid(data, InStr(data, seperator)+Len(seperator));
 
@@ -172,7 +172,7 @@ function int getGameSpeed(int index) {
 
   data = xConf.getString("mapSettings", index);
 
-  // Remove Mapname, TeamScore and TimeLimit
+  // Remove mapName, TeamScore and TimeLimit
   data = mid(data, InStr(data, seperator)+Len(seperator));
   data = mid(data, InStr(data, seperator)+Len(seperator));
 
@@ -185,19 +185,19 @@ function int getGameSpeed(int index) {
  *
  **************************************************************************************************/
 function setValues() {
-  local string mapname;
+  local string mapName;
   local bool bfound;
   local int index, mapEntry;
 
   if(xConf == none) return;
   
-  if (mapList.selectedItem == none) mapname = "";
-  else mapname = NexgenSimpleListItem(mapList.selectedItem).displayText;
+  if (mapList.selectedItem == none) mapName = "";
+  else mapName = NexgenSimpleListItem(mapList.selectedItem).displayText;
 
   // if a map is selected
-  if (mapname != "") {
+  if (mapName != "") {
   
-    mapEntry = getEntry(mapname);
+    mapEntry = getEntry(mapName);
 
     if(xConf.getString("mapSettings", mapEntry) != "") {
       TeamScoreInp.setValue(string(getTeamScore(mapEntry)));
@@ -222,7 +222,7 @@ function setValues() {
  *
  **************************************************************************************************/
 function saveSettings() {
-  local string mapname, data;
+  local string mapName, data;
   local int index, TeamScore, TimeLimit, GameSpeed, mapEntry;
 
   if(DTeamScoreInp.getValue() != "") xClient.setVar("UrSMapSettings_config", "defaultScore", DTeamScoreInp.getValue());
@@ -230,12 +230,12 @@ function saveSettings() {
   if(DGameSpeedInp.getValue() != "") xClient.setVar("UrSMapSettings_config", "defaultSpeed", DGameSpeedInp.getValue());
   
   // get map
-  if (mapList.selectedItem == none) mapname = "";
-  else mapname = NexgenSimpleListItem(mapList.selectedItem).displayText;
+  if (mapList.selectedItem == none) mapName = "";
+  else mapName = NexgenSimpleListItem(mapList.selectedItem).displayText;
   
-  if(mapname != "") {
+  if(mapName != "") {
 
-    mapEntry = getEntry(mapname);
+    mapEntry = getEntry(mapName);
     
     if(TeamScoreInp.getValue() != "") TeamScore = int(TeamScoreInp.getValue());
     else TeamScore = int(xConf.getString("defaultScore"));
@@ -247,7 +247,7 @@ function saveSettings() {
     else GameSpeed = int(xConf.getString("defaultSpeed"));
     
     // Create string
-    data = mapname$seperator$TeamScore$seperator$TimeLimit$seperator$GameSpeed;
+    data = mapName$seperator$TeamScore$seperator$TimeLimit$seperator$GameSpeed;
     
     xClient.setVar("UrSMapSettings_config", "mapSettings", data, mapEntry);
   }
@@ -255,7 +255,7 @@ function saveSettings() {
   xClient.saveSharedData("UrSMapSettings_config");
 }
 
-function int getEntry(string Mapname) {
+function int getEntry(string mapName) {
   local int i;
   
   if(xConf == none) return -1;
@@ -264,7 +264,7 @@ function int getEntry(string Mapname) {
   
     if(getMapname(i) == "") break;
     
-    if(getMapname(i) == Mapname) return i;
+    if(getMapname(i) == mapName) return i;
   }
   
   // No entry found, return next free entry
@@ -282,7 +282,7 @@ function int getEntry(string Mapname) {
  *
  **************************************************************************************************/
 function varChanged(NexgenSharedDataContainer container, string varName, optional int index) {
-  local string mapname;
+  local string mapName;
   
   if (container.containerID ~= class'UrSMapSettingsConfigDC'.default.containerID) {
     switch (varName) {
@@ -291,10 +291,10 @@ function varChanged(NexgenSharedDataContainer container, string varName, optiona
       case "defaultSpeed": DGameSpeedInp.setValue(container.getString(varName));          break;
       case "mapSettings":
         // get map
-       if (mapList.selectedItem == none) mapname = "";
-       else mapname = NexgenSimpleListItem(mapList.selectedItem).displayText;
+       if (mapList.selectedItem == none) mapName = "";
+       else mapName = NexgenSimpleListItem(mapList.selectedItem).displayText;
 
-       if(mapname != "" && getMapname(index) ==  mapname) {
+       if(mapName != "" && getMapname(index) ==  mapName) {
          setValues();
        }
        break;
@@ -481,14 +481,14 @@ function notify(UWindowDialogControl control, byte eventType) {
  *
  **************************************************************************************************/
 function setDefault() {
-  local string mapname;
+  local string mapName;
   local int index;
   local bool bfound;
 
   // get map
-  mapname = NexgenSimpleListItem(mapList.selectedItem).displayText;
+  mapName = NexgenSimpleListItem(mapList.selectedItem).displayText;
 
-  if (mapname == "") {
+  if (mapName == "") {
     client.showMsg("<C00>You have to select a map!");
     return;
   }

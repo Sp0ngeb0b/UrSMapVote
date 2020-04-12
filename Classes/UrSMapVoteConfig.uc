@@ -2,10 +2,10 @@ class UrSMapVoteConfig extends NexgenPluginConfig;
 
 // Map Vote Settings
 var config int opendelay;
-var config int votelimit;
-var config int MidGameVotePercent;
-var config string GameType;
-var config int RepeatLimit;
+var config int voteLimit;
+var config int midGameVotePercent;
+var config string gameType;
+var config int repeatLimit;
 var config string votedMaps[32];
 var config string infoTips[8];
 var config float tipDuration;
@@ -36,7 +36,7 @@ function install() {
 
 /***************************************************************************************************
  *
- *  $DESCRIPTION  Returns the mapname from the config string
+ *  $DESCRIPTION  Returns the mapName from the config string
  *
  **************************************************************************************************/
 function string getMap(int index) {
@@ -59,7 +59,7 @@ function int getTeamScore(int index) {
 
   data = mapSettings[index];
   
-  // Remove Mapname
+  // Remove mapName
   data = mid(data, InStr(data, seperator)+Len(seperator));
 
   return int(Left(Data, InStr(data, seperator)));
@@ -75,7 +75,7 @@ function int getTimeLimit(int index) {
 
   data = mapSettings[index];
 
-  // Remove Mapname and TeamScore
+  // Remove map name and team score
   data = mid(data, InStr(data, seperator)+Len(seperator));
   data = mid(data, InStr(data, seperator)+Len(seperator));
 
@@ -92,7 +92,7 @@ function int getGameSpeed(int index) {
 
   data = mapSettings[index];
 
-  // Remove Mapname, TeamScore and TimeLimit
+  // Remove map name, team score and time limit
   data = mid(data, InStr(data, seperator)+Len(seperator));
   data = mid(data, InStr(data, seperator)+Len(seperator));
 
@@ -106,12 +106,17 @@ function int getGameSpeed(int index) {
  **************************************************************************************************/
 function installVersion100() {
   opendelay = 10;
-  votelimit = 60;
-  MidGameVotePercent = 51;
-  GameType = "Botpack.CTFGame";
-  RepeatLimit = 5;
+  voteLimit = 60;
+  midGameVotePercent = 51;
+  gameType = "Botpack.CTFGame";
+  repeatLimit = 5;
 }
 
+/***************************************************************************************************
+ *
+ *  $DESCRIPTION  Default properties block.
+ *
+ **************************************************************************************************/
 defaultproperties
 {
 }

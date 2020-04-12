@@ -93,7 +93,7 @@ function doubleClickItem(UWindowListBoxItem item) {
 /***************************************************************************************************
  *
  *  $DESCRIPTION  Returns the item with the given mapName.
- *  $PARAM        map  Mapname of the searched item.
+ *  $PARAM        map  mapName of the searched item.
  *  $REQUIRE      item != none
  *  $RETURN       The item with the specified mapName.
  *

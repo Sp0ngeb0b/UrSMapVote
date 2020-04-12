@@ -1,4 +1,4 @@
-class VoteBox extends UWindowListBox;
+class ResultList extends UWindowListBox;
 
 var bool bShowScreenshot;
 var bool bResize;
@@ -23,10 +23,10 @@ function drawItem(Canvas c, UWindowList item, float x, float y, float w, float h
   local float textSizeX, textSizeY;
   local texture flagTex;
   local color backgroundColor;
-  local VoteBoxItem xItem;
+  local ResultListItem xItem;
   local int screenShotDimension;
 
-  xItem = VoteBoxItem(item);
+  xItem = ResultListItem(item);
   
   // Font  
   if(bResize) c.font = root.fonts[F_LargeBold];
@@ -97,14 +97,14 @@ function doubleClickItem(UWindowListBoxItem item) {
  *  $RETURN       The text that should be displayed for the specified item in the listbox.
  *
  **************************************************************************************************/
-function string getMapName(VoteBoxItem item) {
+function string getMapName(ResultListItem item) {
   return item.mapName;
 }
 
 function selectMap(string mapName) {
-  local VoteBoxItem MapItem;
+  local ResultListItem MapItem;
 
-  for(MapItem=VoteBoxItem(Items); MapItem!=None; MapItem=VoteBoxItem(MapItem.Next) )
+  for(MapItem=ResultListItem(Items); MapItem!=None; MapItem=ResultListItem(MapItem.Next) )
    {
       if(mapName ~= MapItem.mapName)
       {
@@ -122,5 +122,5 @@ function selectMap(string mapName) {
  **************************************************************************************************/
 defaultproperties
 {
-     ListClass=Class'VoteBoxItem'
+     ListClass=Class'ResultListItem'
 }

@@ -1,4 +1,4 @@
-class VoteBoxItem expands MapItem;
+class ResultListItem expands MapItem;
 
 var int rank;
 var int voteCount;
@@ -14,14 +14,14 @@ var int voteCount;
  *
  **************************************************************************************************/
 function int compare(UWindowList a, UWindowList b) {
-  if (VoteBoxItem(a).voteCount > 0 && VoteBoxItem(b).voteCount > 0) {
-    if (VoteBoxItem(a).voteCount < VoteBoxItem(b).voteCount) {
+  if (ResultListItem(a).voteCount > 0 && ResultListItem(b).voteCount > 0) {
+    if (ResultListItem(a).voteCount < ResultListItem(b).voteCount) {
       return 1;
     } else {
       return -1;
     }
   }
-  if (VoteBoxItem(a).mapName < VoteBoxItem(b).mapName) {
+  if (ResultListItem(a).mapName < ResultListItem(b).mapName) {
     return -1;
   } else {
     return 1;
@@ -33,7 +33,7 @@ function int compare(UWindowList a, UWindowList b) {
  *  $DESCRIPTION  Default properties block.
  *
  **************************************************************************************************/
- 
+
 defaultproperties
 {
 }

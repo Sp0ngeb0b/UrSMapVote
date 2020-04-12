@@ -4,10 +4,10 @@ var UrSMapVoteConfig xConf;
 
 // Map Vote Settings
 var int opendelay;
-var int votelimit;
-var int MidGameVotePercent;
-var string GameType;
-var int RepeatLimit;
+var int voteLimit;
+var int midGameVotePercent;
+var string gameType;
+var int repeatLimit;
 var string votedMaps[32];
 var string infoTips[8];
 var float tipDuration;
@@ -27,10 +27,10 @@ function loadData() {
   xConf = UrSMapVoteConfig(xControl.xConf);
 
   opendelay           = xConf.opendelay;
-  votelimit           = xConf.votelimit;
-  MidGameVotePercent  = xConf.MidGameVotePercent;
-  GameType            = xConf.GameType;
-  RepeatLimit         = xConf.RepeatLimit;
+  voteLimit           = xConf.voteLimit;
+  midGameVotePercent  = xConf.midGameVotePercent;
+  gameType            = xConf.gameType;
+  repeatLimit         = xConf.repeatLimit;
   for (index = 0; index < arrayCount(votedMaps); index++)
     votedMaps[index]  = xConf.votedMaps[index];
     
@@ -66,10 +66,10 @@ function saveData() {
 function set(string varName, coerce string value, optional int index) {
   switch (varName) {
     case "opendelay":              opendelay              = clamp(int(value), 0, 999);    if (xConf != none) { xConf.opendelay          = opendelay;              } break;
-    case "votelimit":              votelimit              = clamp(int(value), 0, 999);    if (xConf != none) { xConf.votelimit          = votelimit;              } break;
-    case "MidGameVotePercent":     MidGameVotePercent     = clamp(int(value), 0, 100);    if (xConf != none) { xConf.MidGameVotePercent = MidGameVotePercent;     } break;
-    case "GameType":               GameType               = value;                        if (xConf != none) { xConf.GameType           = GameType;               } break;
-    case "RepeatLimit":            RepeatLimit            = clamp(int(value), 0, 999);    if (xConf != none) { xConf.RepeatLimit        = RepeatLimit;            } break;
+    case "voteLimit":              voteLimit              = clamp(int(value), 0, 999);    if (xConf != none) { xConf.voteLimit          = voteLimit;              } break;
+    case "midGameVotePercent":     midGameVotePercent     = clamp(int(value), 0, 100);    if (xConf != none) { xConf.midGameVotePercent = midGameVotePercent;     } break;
+    case "gameType":               gameType               = value;                        if (xConf != none) { xConf.gameType           = gameType;               } break;
+    case "repeatLimit":            repeatLimit            = clamp(int(value), 0, 999);    if (xConf != none) { xConf.repeatLimit        = repeatLimit;            } break;
     case "votedMaps":              votedMaps[index]       = value;                        if (xConf != none) { xConf.votedMaps[index]   = votedMaps[index];       } break;
     case "infoTips":               infoTips[index]        = value;                        if (xConf != none) { xConf.infoTips[index]    = infoTips[index];        } break;
     case "tipDuration":            tipDuration            = fclamp(float(value), 0, 99);  if (xConf != none) { xConf.tipDuration        = tipDuration;            } break;
@@ -92,10 +92,10 @@ function set(string varName, coerce string value, optional int index) {
 function bool mayRead(NexgenExtendedClientController xClient, string varName) {
   switch (varName) {
     case "opendelay":            return true;
-    case "votelimit":            return true;
-    case "MidGameVotePercent":   return true;
-    case "GameType":             return true;
-    case "RepeatLimit":          return true;
+    case "voteLimit":            return true;
+    case "midGameVotePercent":   return true;
+    case "gameType":             return true;
+    case "repeatLimit":          return true;
     case "votedMaps":            return true;
     case "infoTips":             return true;
     case "tipDuration":          return true;
@@ -119,10 +119,10 @@ function bool mayRead(NexgenExtendedClientController xClient, string varName) {
 function bool mayWrite(NexgenExtendedClientController xClient, string varName) {
   switch (varName) {
     case "opendelay":            return xClient.client.hasRight(xClient.client.R_ServerAdmin);
-    case "votelimit":            return xClient.client.hasRight(xClient.client.R_ServerAdmin);
-    case "MidGameVotePercent":   return xClient.client.hasRight(xClient.client.R_ServerAdmin);
-    case "GameType":             return xClient.client.hasRight(xClient.client.R_ServerAdmin);
-    case "RepeatLimit":          return xClient.client.hasRight(xClient.client.R_ServerAdmin);
+    case "voteLimit":            return xClient.client.hasRight(xClient.client.R_ServerAdmin);
+    case "midGameVotePercent":   return xClient.client.hasRight(xClient.client.R_ServerAdmin);
+    case "gameType":             return xClient.client.hasRight(xClient.client.R_ServerAdmin);
+    case "repeatLimit":          return xClient.client.hasRight(xClient.client.R_ServerAdmin);
     case "votedMaps":            return xClient.client.hasRight(xClient.client.R_ServerAdmin);
     case "infoTips":             return xClient.client.hasRight(xClient.client.R_ServerAdmin);
     case "tipDuration":          return xClient.client.hasRight(xClient.client.R_ServerAdmin);
@@ -177,9 +177,9 @@ function byte getByte(string varName, optional int index) {
 function int getInt(string varName, optional int index) {
   switch (varName) {
     case "opendelay":           return opendelay;
-    case "votelimit":           return votelimit;
-    case "MidGameVotePercent":  return MidGameVotePercent;
-    case "RepeatLimit":         return RepeatLimit;
+    case "voteLimit":           return voteLimit;
+    case "midGameVotePercent":  return midGameVotePercent;
+    case "repeatLimit":         return repeatLimit;
   }
 }
 
@@ -211,10 +211,10 @@ function float getFloat(string varName, optional int index) {
 function string getString(string varName, optional int index) {
   switch (varName) {
     case "opendelay":            return string(opendelay);
-    case "votelimit":            return string(votelimit);
-    case "MidGameVotePercent":   return string(MidGameVotePercent);
-    case "GameType":             return GameType;
-    case "RepeatLimit":          return string(RepeatLimit);
+    case "voteLimit":            return string(voteLimit);
+    case "midGameVotePercent":   return string(midGameVotePercent);
+    case "gameType":             return gameType;
+    case "repeatLimit":          return string(repeatLimit);
     case "votedMaps":            return votedMaps[index];
     case "infoTips":             return infoTips[index];
     case "tipDuration":          return string(tipDuration);
@@ -249,10 +249,10 @@ function int getVarCount() {
 function string getVarName(int varIndex) {
   switch (varIndex) {
     case 0:  return "opendelay";
-    case 1:  return "votelimit";
-    case 2:  return "MidGameVotePercent";
-    case 3:  return "GameType";
-    case 4:  return "RepeatLimit";
+    case 1:  return "voteLimit";
+    case 2:  return "midGameVotePercent";
+    case 3:  return "gameType";
+    case 4:  return "repeatLimit";
     case 5:  return "votedMaps";
     case 6:  return "infoTips";
     case 7:  return "tipDuration";
@@ -274,10 +274,10 @@ function string getVarName(int varIndex) {
 function byte getVarType(string varName) {
   switch (varName) {
     case "opendelay":            return DT_INT;
-    case "votelimit":            return DT_INT;
-    case "MidGameVotePercent":   return DT_INT;
-    case "GameType":             return DT_STRING;
-    case "RepeatLimit":          return DT_INT;
+    case "voteLimit":            return DT_INT;
+    case "midGameVotePercent":   return DT_INT;
+    case "gameType":             return DT_STRING;
+    case "repeatLimit":          return DT_INT;
     case "votedMaps":            return DT_STRING;
     case "infoTips":             return DT_STRING;
     case "tipDuration":          return DT_FLOAT;
@@ -328,7 +328,6 @@ function bool isArray(string varName) {
  *  $DESCRIPTION  Default properties block.
  *
  **************************************************************************************************/
-
 defaultproperties
 {
      containerID="UrSmv_config"

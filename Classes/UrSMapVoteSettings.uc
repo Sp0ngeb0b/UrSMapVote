@@ -5,7 +5,8 @@ var NexgenSharedDataContainer xConf;
 
 var NexgenEditControl delayInp;
 var NexgenEditControl voteTimeInp;
-var NexgenEditControl RepeatInp;
+var NexgenEditControl repeatInp;
+var NexgenEditControl midGameVotePercInp;
 var NexgenEditControl tipDurationInp;
 var NexgenEditControl tipColorRInp;
 var NexgenEditControl tipColorGInp;
@@ -22,6 +23,7 @@ var UWindowSmallButton saveButton;
  *
  **************************************************************************************************/
 function setContent() {
+  local NexgenContentPanel p;
   local int region;
   local int index;
 
@@ -35,6 +37,7 @@ function setContent() {
   splitRegionH(1, defaultComponentDist);
   addComponent(class'NexgenDummyComponent');
 
+  // Buttons
   splitRegionH(20, defaultComponentDist, , true);
   region = currRegion;
   skipRegion();
@@ -45,46 +48,61 @@ function setContent() {
   resetButton = addButton(client.lng.resetTxt);
 
   selectRegion(region);
-  selectRegion(divideRegionH(9, defaultComponentDist));
+  selectRegion(splitRegionH(48, defaultComponentDist));
   
-  divideRegionV(2, defaultComponentDist);
-  divideRegionV(2, defaultComponentDist);
-  divideRegionV(2, defaultComponentDist);
-  divideRegionV(2, defaultComponentDist);
-  divideRegionV(7, defaultComponentDist);
-  for(index=0; index<4; index++) divideRegionV(2, defaultComponentDist);
-
-  addLabel("VoteWindow Delay", true, TA_Left);
-  delayInp = addEditBox(, 64);
-
-  addLabel("Vote Time", true, TA_Left);
-  voteTimeInp = addEditBox(, 64);
-
-  addLabel("Repeat Limit", true, TA_Left);
-  RepeatInp = addEditBox(, 64);
+  // Vote settings
+  p = addContentPanel(PBT_Transparent); 
+  p.divideRegionH(2, defaultComponentDist);
+  p.divideRegionV(2, defaultComponentDist);
+  p.divideRegionV(2, defaultComponentDist); 
+  p.divideRegionV(2, defaultComponentDist);
+  p.divideRegionV(2, defaultComponentDist);
+  p.divideRegionV(2, defaultComponentDist);
+  p.divideRegionV(2, defaultComponentDist);
+  p.addLabel("Vote Start Delay", true, TA_Left);
+  delayInp = p.addEditBox(, 64);
+  p.addLabel("Vote Time", true, TA_Left);
+  voteTimeInp = p.addEditBox(, 64);
+  p.addLabel("Block Map for X Rounds", true, TA_Left);
+  repeatInp = p.addEditBox(, 64);
+  p.addLabel("Mid-game vote percent", true, TA_Left);
+  midGameVotePercInp = p.addEditBox(, 64);
   
-  addLabel("Tip Duration", true, TA_Left);
-  tipDurationInp = addEditBox(, 64);
-  
-  addLabel("Tip Color:", true, TA_Left);
-  addLabel("R", true, TA_Right);
-  tipColorRInp = addEditBox(, 64);
-  addLabel("G", true, TA_Right);
-  tipColorGInp = addEditBox(, 64);
-  addLabel("B", true, TA_Right);
-  tipColorBInp = addEditBox(, 64);
-  
-  for(index=0; index<8; index++) splitRegionV(32, defaultComponentDist);
-  
+  // Tips
+  p = addContentPanel(); 
+  p.splitRegionH(20, defaultComponentDist);
+  p.divideRegionV(2, defaultComponentDist);
+  region = p.currRegion++;
+  p.divideRegionV(2, defaultComponentDist);
+  p.splitRegionV(64, defaultComponentDist);
+  p.addLabel("Tip Duration", true, TA_Left);
+  tipDurationInp = p.addEditBox(, 64);
+  p.addLabel("Tip Color:", true, TA_Left);
+  p.splitRegionV(16, defaultComponentDist);
+  p.addLabel("R", true, TA_Right);
+  p.splitRegionV(24+defaultComponentDist, defaultComponentDist);
+  tipColorRInp = p.addEditBox(, 24);
+  p.splitRegionV(16, defaultComponentDist);
+  p.addLabel("G", true, TA_Right);
+  p.splitRegionV(24+defaultComponentDist, defaultComponentDist);
+  tipColorGInp = p.addEditBox(, 24);
+  p.splitRegionV(16, defaultComponentDist);
+  p.addLabel("B", true, TA_Right);
+  p.splitRegionV(24+defaultComponentDist, defaultComponentDist);
+  tipColorBInp = p.addEditBox(, 24);
+  p.selectRegion(region);
+  p.selectRegion(p.divideRegionH(4, defaultComponentDist));
+  for(index=0; index<4; index++) p.divideRegionV(2, defaultComponentDist);
+  for(index=0; index<8; index++) p.splitRegionV(32, defaultComponentDist);
   for(index=0; index<8; index++) {
-    addLabel("Tip "$index+1, true, TA_Left);
-    infoTipsInp[index] = addEditBox();
+    p.addLabel("Tip "$index+1, true, TA_Left);
+    infoTipsInp[index] = p.addEditBox();
   }
 
   // Configure components.
   delayInp.setNumericOnly(true);
   voteTimeInp.setNumericOnly(true);
-  RepeatInp.setNumericOnly(true);
+  repeatInp.setNumericOnly(true);
   
   tipDurationInp.setNumericOnly(true);
   tipDurationInp.setNumericFloat(true);
@@ -95,7 +113,7 @@ function setContent() {
 
   delayInp.setMaxLength(2);
   voteTimeInp.setMaxLength(3);
-  RepeatInp.setMaxLength(2);
+  repeatInp.setMaxLength(2);
   tipDurationInp.setMaxLength(3);
 
   setValues();
@@ -113,14 +131,41 @@ function setValues() {
   if (xConf == none) return;
 
   delayInp.setValue(xConf.getString("opendelay"));
-  voteTimeInp.setValue(xConf.getString("votelimit"));
-  RepeatInp.setValue(xConf.getString("RepeatLimit"));
+  voteTimeInp.setValue(xConf.getString("voteLimit"));
+  repeatInp.setValue(xConf.getString("repeatLimit"));
+  midGameVotePercInp.setValue(xConf.getString("midGameVotePercent"));
   tipDurationInp.setValue(Left(xConf.getString("tipDuration"), InStr(xConf.getString("tipDuration"), ".")+3));
   tipColorRInp.setValue(xConf.getString("tipColorR"));
   tipColorGInp.setValue(xConf.getString("tipColorG"));
   tipColorBInp.setValue(xConf.getString("tipColorB"));
   for(index=0; index<8; index++) infoTipsInp[index].setValue(xConf.getString("infoTips", index));
 }
+
+/***************************************************************************************************
+ *
+ *  $DESCRIPTION  Loads the game type list.
+ *
+ **************************************************************************************************
+function loadGameTypeList() {
+	local int index;
+	local string gameClass;
+	local string mapPrefix;
+	local string gameName;
+	
+	// Load available game types.
+	while (index < arrayCount(client.sConf.gameTypeInfo) && client.sConf.gameTypeInfo[index] != "") {
+		class'NexgenUtil'.static.split(client.sConf.gameTypeInfo[index], gameClass, mapPrefix);
+		class'NexgenUtil'.static.split(mapPrefix, mapPrefix, gameName);
+		
+		gameTypeList.addItem(gameName, string(index));
+		
+		index++;
+	}
+	
+	// Select current game type.
+	gameTypeList.setSelectedIndex(client.sConf.activeGameType);
+}
+*/
 
 /***************************************************************************************************
  *
@@ -150,8 +195,9 @@ function saveSettings() {
   local int index;
 
   xClient.setVar("UrSmv_config", "opendelay", delayInp.getValue());
-  xClient.setVar("UrSmv_config", "votelimit", voteTimeInp.getValue());
-  xClient.setVar("UrSmv_config", "RepeatLimit", RepeatInp.getValue());
+  xClient.setVar("UrSmv_config", "voteLimit", voteTimeInp.getValue());
+  xClient.setVar("UrSmv_config", "repeatLimit", repeatInp.getValue());
+  xClient.setVar("UrSmv_config", "midGameVotePercent", midGameVotePercInp.getValue());
   xClient.setVar("UrSmv_config", "tipDuration", tipDurationInp.getValue());
   xClient.setVar("UrSmv_config", "tipColorR", tipColorRInp.getValue());
   xClient.setVar("UrSmv_config", "tipColorG", tipColorGInp.getValue());
@@ -175,8 +221,9 @@ function varChanged(NexgenSharedDataContainer container, string varName, optiona
   if (container.containerID ~= class'UrSMapVoteConfigDC'.default.containerID) {
     switch (varName) {
       case "opendelay": delayInp.setValue(container.getString(varName));              break;
-      case "votelimit": voteTimeInp.setValue(container.getString(varName));           break;
-      case "RepeatLimit": RepeatInp.setValue(container.getString(varName));           break;
+      case "voteLimit": voteTimeInp.setValue(container.getString(varName));           break;
+      case "repeatLimit": repeatInp.setValue(container.getString(varName));           break;
+      case "midGameVotePercent": midGameVotePercInp.setValue(container.getString(varName)); break;
       case "tipDuration": tipDurationInp.setValue(Left(container.getString(varName), InStr(container.getString(varName), ".")+3)); break;
       case "tipColorR": tipColorRInp.setValue(container.getString(varName));           break;
       case "tipColorG": tipColorGInp.setValue(container.getString(varName));           break;

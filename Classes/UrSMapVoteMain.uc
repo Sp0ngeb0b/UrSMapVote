@@ -17,19 +17,18 @@ class UrSMapVoteMain extends NexgenExtendedPlugin;
 var int versionNum;                     // Plugin version number.
 
 var bool bGameEnded;
-var int TimeLeft;
+var int timeLeft;
 var int delayTime;
-var int MapCount;
+var int mapCount;
 var bool bLevelSwitchPending;
-var string ServerTravelString;
-var int Delay;
+var string serverTravelString;
+var int delay;
 
-var int MAPVOTECOUNTS[100];
-var string MAPVOTENAME[100];
+var int mapvotecounts[100];
+var string mapvotename[100];
 var bool   bMidGameVote;
-var int    PlayerIDList[32];
-var int    PlayerVote[32];
-var int    ServerTravelTime;
+var int    playerIDList[32];
+var int    playerVote[32];
 var string maplist[128];
 var bool bReadMaps;
 
@@ -51,7 +50,7 @@ function bool initialize() {
   }
 
   // Check Repeat list
-  for (index = UrSMapVoteConfig(xConf).RepeatLimit; index < arrayCount(UrSMapVoteConfig(xConf).votedMaps); index++) {
+  for (index = UrSMapVoteConfig(xConf).repeatLimit; index < arrayCount(UrSMapVoteConfig(xConf).votedMaps); index++) {
     if (UrSMapVoteConfig(xConf).votedMaps[index] != "") {
       UrSMapVoteConfig(xConf).votedMaps[index] = "";
     }
@@ -103,33 +102,31 @@ function createSharedDataContainers() {
 /***************************************************************************************************
  *
  *  $DESCRIPTION  Mutate Commands.
- *  $PARAM        MutateString  The mutate command.
+ *  $PARAM        mutateString  The mutate command.
  *  $PARAM        Sender  PlayerPawn who sent the command.
  *
  **************************************************************************************************/
-function Mutate(string MutateString, PlayerPawn Sender) {
+function Mutate(string mutateString, PlayerPawn Sender) {
   local UrSMapVoteClient xClient;
-  local string MapName;
+  local string mapName;
 
-  Super.Mutate(MutateString, Sender);
+  Super.Mutate(mutateString, Sender);
 
   xClient = UrSMapVoteClient(getXClient(sender));
   if (xClient == none) return;
 
-  if(left(Caps(MutateString),10) == "BDBMAPVOTE") {
-    if(Mid(Caps(MutateString),11,8) == "VOTEMENU") {
+  if(left(Caps(mutateString),10) == "BDBMAPVOTE") {
+    if(Mid(Caps(mutateString),11,8) == "VOTEMENU") {
+      if(Level.TimeSeconds > 5) {
+        xClient.openMapvote();
+      } else xClient.client.showMsg("<C00>MapVote is not available at match start.");
+    }
 
-         if(Level.TimeSeconds > 5) {
-           xClient.openMapvote();
-         }
-         else xClient.client.showMsg("<C00>MapVote is not available at match start.");
-      }
-
-      if(Mid(Caps(MutateString),11,3) == "MAP") {
-         MapName = mid(MutateString,15);
-         SubmitVote(MapName,Sender);
-      }
-   }
+    if(Mid(Caps(mutateString),11,3) == "MAP") {
+      mapName = mid(mutateString,15);
+      submitVote(mapName,Sender);
+    }
+  }
 }
 
 /***************************************************************************************************
@@ -186,7 +183,7 @@ function gameEnded() {
   local UrSMapVoteClient xClient;
 
   DeathMatchPlus(Level.Game).bDontRestart = true;
-  TimeLeft = UrSMapVoteConfig(xConf).votelimit;
+  timeLeft = UrSMapVoteConfig(xConf).voteLimit;
   delayTime = UrSMapVoteConfig(xConf).opendelay;
 
   bGameEnded = true;
@@ -198,7 +195,7 @@ function gameEnded() {
  *  $OVERRIDE
  *
  **************************************************************************************************/
-function OpenVoteWindow() {
+function openVoteWindow() {
   local NexgenClient client;
   local UrSMapVoteClient xClient;
 
@@ -226,17 +223,17 @@ function OpenVoteWindow() {
 function virtualTimer() {
   local Pawn P;
   local pawn aPawn;
-  local int i, VoterNum,NoVoteCount,mapnum;
+  local int i, voterNum,noVoteCount,mapnum;
   local NexgenClient client;
   local UrSMapVoteClient xClient;
   local int x;
   local NexgenSharedDataContainer container;
-  
+
   // Called only one time
   // Sets up the array and loads the maplist
   if(!bReadMaps) {
     bReadMaps = true;
-    for(x=0;x<32;x++) PlayerIDList[x] = -1;
+    for(x=0;x<32;x++) playerIDList[x] = -1;
 
     // Locate NexgenPlus
     for(i=0;i<ArrayCount(control.plugins);i++) {
@@ -247,11 +244,11 @@ function virtualTimer() {
     }
     
     if(container == none) {
-      log("MAPLIST DATACONTAINER NOT FOUND ! ! ! ");
+      control.nsclog("[NexgenMapVote] Maplist data container not found!");
       return;
     }
        
-    MapCount = container.getInt("numMaps");
+    mapCount = container.getInt("numMaps");
 
     // Load maps from container
     for(x=0;x<ArrayCount(maplist)-1;x++) {
@@ -262,135 +259,132 @@ function virtualTimer() {
   // Do ServerTravel.
   if(bLevelSwitchPending) {
     for (client = control.clientList; client != none; client = client.nextClient) {
-        xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
-        xClient.TimeLeft  = 0;
+      xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
+      xClient.timeLeft  = 0;
     }
     if( Level.NextURL == "" ) {
       if(Level.NextSwitchCountdown < 0) {
-
         // Get a random mapfile
-        // MapCount = maps.numMaps;
-        mapnum = Rand(MapCount) + 1;
+        // mapCount = maps.numMaps;
+        mapnum = Rand(mapCount) + 1;
 
         while(Left(maplist[mapnum],3) == "[X]") {
-          mapnum = Rand(MapCount) + 1;
+          mapnum = Rand(mapCount) + 1;
         }
 
-        ServerTravelString = SetupGameMap(maplist[mapnum]);
-        Level.ServerTravel(ServerTravelString, false);
-      } else Level.ServerTravel(ServerTravelString, false);
+        serverTravelString = setupGameMap(maplist[mapnum]);
+        Level.ServerTravel(serverTravelString, false);
+      } else Level.ServerTravel(serverTravelString, false);
     }
     return;
   }
 
   // Check players
-  CleanUpPlayerIDs();
+  cleanUpPlayerIDs();
 
   // Update votes
-  TallyVotes(false);
+  tallyVotes(false);
 
   // Game has ended. Do Stuff:
   if (bGameEnded) {
-
     // Open VoteWindow.
     if (delayTime > 0) {
       delayTime--;
 
       if (delayTime == 0) {
-        OpenVoteWindow();
+        openVoteWindow();
         control.broadcastMsg("<C04>Vote for the next map!");
       }
     }
 
     // Start/Update Voting Countdown.
-    if (delayTime < 1 && TimeLeft > 0) {
-      if (TimeLeft == UrSMapVoteConfig(xConf).votelimit) control.broadcastMsg("<C04>"$TimeLeft$" seconds left to vote.");
-      TimeLeft--;
+    if (delayTime < 1 && timeLeft > 0) {
+      if (timeLeft == UrSMapVoteConfig(xConf).voteLimit) control.broadcastMsg("<C04>"$timeLeft$" seconds left to vote.");
+      timeLeft--;
 
       for (client = control.clientList; client != none; client = client.nextClient) {
         xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
         xClient.delayTime = delayTime;
-        xClient.TimeLeft  = TimeLeft;
+        xClient.timeLeft  = timeLeft;
         xclient.bGameEnded = bGameEnded;
       }
 
-      if(TimeLeft == 10) control.broadcastMsg("<C04>10 seconds left to vote.");
+      if(timeLeft == 10) control.broadcastMsg("<C04>10 seconds left to vote.");
 
       // Countdown Voice Announcer.
-      if(TimeLeft < 11 && TimeLeft > 0 ) {
+      if(timeLeft < 11 && timeLeft > 0 ) {
         for( P = Level.PawnList; P!=None; P=P.nextPawn ) {
-          if(P.IsA('TournamentPlayer')) TournamentPlayer(P).TimeMessage(TimeLeft);
+          if(P.IsA('TournamentPlayer')) TournamentPlayer(P).TimeMessage(timeLeft);
         }
       }
     }
 
-    if(TimeLeft == 10 && TimeLeft > 0) {
-        NoVoteCount = 0;
+    if(timeLeft == 10 && timeLeft > 0) {
+        noVoteCount = 0;
         for( aPawn=Level.PawnList; aPawn!=None; aPawn=aPawn.NextPawn ) {
            if(aPawn.bIsPlayer && PlayerPawn(aPawn) != none) {
-             VoterNum = FindPlayerIndex(PlayerPawn(aPawn).PlayerReplicationInfo.PlayerID);
-             if(VoterNum > -1)  {
-               if(PlayerVote[VoterNum] == 0) NoVoteCount++;
+             voterNum = findPlayerIndex(PlayerPawn(aPawn).PlayerReplicationInfo.playerID);
+             if(voterNum > -1)  {
+               if(playerVote[voterNum] == 0) noVoteCount++;
              }
            }
         }
-        if(NoVoteCount == 0)
-        TallyVotes(true);
+        if(noVoteCount == 0)
+        tallyVotes(true);
     }
-    if(TimeLeft == 0) TallyVotes(true);
+    if(timeLeft == 0) tallyVotes(true);
   }
 }
 
 /***************************************************************************************************
  *
- *  $DESCRIPTION  Retrieves the PlayerIDList index for a given PlayerID.
- *  $Param  PlayerID  PlayerID of the player to search.
- *  $Return The PlayerIDList index for the searched player.
+ *  $DESCRIPTION  Retrieves the playerIDList index for a given playerID.
+ *  $Param  playerID  playerID of the player to search.
+ *  $Return The playerIDList index for the searched player.
  *
  **************************************************************************************************/
-function int FindPlayerIndex(int PlayerID) {
-   local int x;
+function int findPlayerIndex(int playerID) {
+  local int x;
 
-   for(x=0;x<32;x++) {
-    if(PlayerIDList[x] == PlayerID) return x;
-   }
+  for(x=0;x<32;x++) {
+    if(playerIDList[x] == playerID) return x;
+  }
 
-   for(x=0;x<32;x++) {
-    if(PlayerIDList[x]==-1) {
-      PlayerIDList[x]=PlayerID;
+  for(x=0;x<32;x++) {
+    if(playerIDList[x]==-1) {
+      playerIDList[x]=playerID;
       return x;
     }
-   }
-
-   return -1;
+  }
+  return -1;
 }
 
 /***************************************************************************************************
  *
- *  $DESCRIPTION  Cleans up the PlayerID list.
+ *  $DESCRIPTION  Cleans up the playerID list.
  *
  **************************************************************************************************/
-function CleanUpPlayerIDs() {
-   local Pawn aPawn;
-   local int x;
-   local bool bFound;
+function cleanUpPlayerIDs() {
+  local Pawn aPawn;
+  local int x;
+  local bool bFound;
 
-   for(x=0;x<32;x++) {
+  for(x=0;x<32;x++) {
 
-      if(PlayerIDList[x]>-1) {
-         bFound = false;
-         for( aPawn=Level.PawnList; aPawn!=None; aPawn=aPawn.NextPawn ) {
-          if(aPawn.bIsPlayer && aPawn.IsA('PlayerPawn') && PlayerPawn(aPawn).PlayerReplicationInfo.PlayerID == PlayerIDList[x]) {
-            bFound = true;
-            break;
-          }
-         }
-         if(!bFound) {
-          PlayerVote[x] = 0;
-          PlayerIDList[x] = -1;
-         }
+    if(playerIDList[x]>-1) {
+       bFound = false;
+       for( aPawn=Level.PawnList; aPawn!=None; aPawn=aPawn.NextPawn ) {
+        if(aPawn.bIsPlayer && aPawn.IsA('PlayerPawn') && PlayerPawn(aPawn).PlayerReplicationInfo.playerID == playerIDList[x]) {
+          bFound = true;
+          break;
+        }
+       }
+      if(!bFound) {
+        playerVote[x] = 0;
+        playerIDList[x] = -1;
       }
-   }
+    }
+  }
 }
 
 /***************************************************************************************************
@@ -399,142 +393,142 @@ function CleanUpPlayerIDs() {
  *  $Param  bForceMapSwitch  Whether the MapSwitch has been forced.
  *
  **************************************************************************************************/
-function TallyVotes(bool bForceMapSwitch) {
-   local string MapName;
-   local Actor  A;
-   local int    index,x,y,topmap;
-   local int    VoteCount[1024];
-   local int    Ranking[32];
-   local int    PlayersThatVoted;
-   local int    TieCount;
-   local string GameType,CurrentMap;
-   local int i,textline;
-   local string winmap;
+function tallyVotes(bool bForceMapSwitch) {
+  local string mapName;
+  local Actor  A;
+  local int    index,x,y,topmap;
+  local int    voteCount[1024];
+  local int    ranking[32];
+  local int    playersThatVoted;
+  local int    tieCount;
+  local string gameType, currentMap;
+  local int i,textline;
+  local string winmap;
 
   // Check whether we are done
   if(bLevelSwitchPending) return;
 
-   PlayersThatVoted = 0;
-   for(x=0;x<32;x++) {
-    if(PlayerVote[x] != 0) {
-    
-      PlayersThatVoted++;
-      VoteCount[PlayerVote[x]]++;
-        if(float(VoteCount[PlayerVote[x]]) / float(Level.Game.NumPlayers) > 0.5 && Level.Game.bGameEnded) {
-          bForceMapSwitch = true;
-        }
-      }
-   }
+  playersThatVoted = 0;
+  for(x=0;x<32;x++) {
+  if(playerVote[x] != 0) {
 
-   if(!Level.Game.bGameEnded && !bMidGameVote && (float(PlayersThatVoted) / float(Level.Game.NumPlayers)) * 100 >= UrSMapVoteConfig(xConf).MidGameVotePercent) {
-      if(Level.Game.NumPlayers>2) control.broadcastMsg("<C04>Mid-game mapvoting:"@UrSMapVoteConfig(xConf).MidGameVotePercent$"% of the players want to change the map!");
-      bMidGameVote = true;
-      TimeLeft = UrSMapVoteConfig(xConf).votelimit;
-      delayTime = 1;
-      bGameEnded = true;
-   }
-
-   // Get rankings
-   index = 0;
-   for(x=1;x<=MapCount;x++) {
-    if(VoteCount[x] > 0) {
-      Ranking[index++] = x;
-    }
-   }
-
-   for(x=0; x<index-1; x++) {
-    for(y=x+1; y<index; y++) {
-      if(VoteCount[Ranking[x]] < VoteCount[Ranking[y]]) {
-        topmap = Ranking[x];
-        Ranking[x] = Ranking[y];
-        Ranking[y] = topmap;
+    playersThatVoted++;
+    voteCount[playerVote[x]]++;
+      if(float(voteCount[playerVote[x]]) / float(Level.Game.NumPlayers) > 0.5 && Level.Game.bGameEnded) {
+        bForceMapSwitch = true;
       }
     }
-   }
+  }
 
-   // Update entries
-   for(x=0;x<index;x++) {
-    MAPVOTECOUNTS[x] = VoteCount[Ranking[x]];
-    MAPVOTENAME[x] = maplist[Ranking[x]];
-   }
-   
-   MAPVOTENAME[index] = "";
-   MAPVOTECOUNTS[index] = 0;
+  if(!Level.Game.bGameEnded && !bMidGameVote && (float(playersThatVoted) / float(Level.Game.NumPlayers)) * 100 >= UrSMapVoteConfig(xConf).midGameVotePercent) {
+    if(Level.Game.NumPlayers > 2) control.broadcastMsg("<C04>Mid-game mapvoting:"@UrSMapVoteConfig(xConf).midGameVotePercent$"% of the players want to change the map!");
+    bMidGameVote = true;
+    timeLeft = UrSMapVoteConfig(xConf).voteLimit;
+    delayTime = 1;
+    bGameEnded = true;
+  }
 
-   // Update client windows
-   updateVotelist();
+  // Get rankings
+  index = 0;
+  for(x=1;x<=mapCount;x++) {
+  if(voteCount[x] > 0) {
+    ranking[index++] = x;
+  }
+  }
 
-   if(VoteCount[Ranking[0]] == VoteCount[Ranking[1]] && VoteCount[Ranking[0]] != 0) {
-    TieCount = 1;
-    for(x=1; x<index; x++) {
-      if(VoteCount[Ranking[0]] == VoteCount[Ranking[x]])
-         TieCount++;
-      }
-      topmap = Ranking[Rand(TieCount)];
+  for(x=0; x<index-1; x++) {
+  for(y=x+1; y<index; y++) {
+    if(voteCount[ranking[x]] < voteCount[ranking[y]]) {
+      topmap = ranking[x];
+      ranking[x] = ranking[y];
+      ranking[y] = topmap;
+    }
+  }
+  }
 
-      CurrentMap = GetURLMap();
-      if(CurrentMap != "" && !(Right(CurrentMap,4) ~= ".unr")) CurrentMap = CurrentMap$".unr";
+  // Update entries
+  for(x=0;x<index;x++) {
+  mapvotecounts[x] = voteCount[ranking[x]];
+  mapvotename[x] = maplist[ranking[x]];
+  }
 
-      x = 0;
-      while(maplist[topmap] ~= CurrentMap) {
-        topmap = Ranking[Rand(TieCount)];
-        x++;
-        if(x>20) break;
-      }
-   }
-   else topmap = Ranking[0];
+  mapvotename[index] = "";
+  mapvotecounts[index] = 0;
 
-   if(bForceMapSwitch) {
-     if(PlayersThatVoted == 0) {
-       topmap = Rand(MapCount) + 1;
-       while(Left(maplist[topmap],3) == "[X]") topmap = Rand(MapCount) + 1;
-       control.broadcastMsg("<C04>Noone voted. Choosing random map file ..");
+  // Update client windows
+  updateVotelist();
+
+  if(voteCount[ranking[0]] == voteCount[ranking[1]] && voteCount[ranking[0]] != 0) {
+  tieCount = 1;
+  for(x=1; x<index; x++) {
+    if(voteCount[ranking[0]] == voteCount[ranking[x]])
+       tieCount++;
+    }
+    topmap = ranking[Rand(tieCount)];
+
+    currentMap = GetURLMap();
+    if(currentMap != "" && !(Right(currentMap,4) ~= ".unr")) currentMap = currentMap$".unr";
+
+    x = 0;
+    while(maplist[topmap] ~= currentMap) {
+      topmap = ranking[Rand(tieCount)];
+      x++;
+      if(x>20) break;
+    }
+  } else topmap = ranking[0];
+
+  if(bForceMapSwitch) {
+   if(playersThatVoted == 0) {
+     topmap = Rand(mapCount) + 1;
+     x = 0;
+     while(Left(maplist[topmap],3) == "[X]") {
+      topmap = Rand(mapCount) + 1;
+      if(x++>50) break;
      }
+     control.broadcastMsg("<C04>Noone voted. Choosing random map file ..");
    }
+  }
 
-   if(bForceMapSwitch || Level.Game.NumPlayers == PlayersThatVoted && PlayersThatVoted > 0 ) {
-      if(maplist[topmap] == "") return;
+  if(bForceMapSwitch || Level.Game.NumPlayers == playersThatVoted && playersThatVoted > 0 ) {
+    if(maplist[topmap] == "") return;
 
-      winmap = maplist[topmap];
-      i = InStr(Caps(winmap), ".UNR");
-      if(i != -1) winmap = Left(winmap, i);
-      control.broadcastMsg("<C04>"$winmap $ " has won.");
+    winmap = maplist[topmap];
+    i = InStr(Caps(winmap), ".UNR");
+    if(i != -1) winmap = Left(winmap, i);
+    control.broadcastMsg("<C04>"$winmap $ " has won.");
 
-      CloseVoteWindows();
-      bLevelSwitchPending = true;
-      ServerTravelString = SetupGameMap(maplist[topmap]);
-      ServerTravelTime = Level.TimeSeconds;
+    closeVoteWindows();
+    bLevelSwitchPending = true;
+    serverTravelString = setupGameMap(maplist[topmap]);
 
-      updateRepeatList(maplist[topmap]);
-
-   }
-
+    updateRepeatList(maplist[topmap]);
+  }
 }
 
 /***************************************************************************************************
  *
  *  $DESCRIPTION  Updates the RepeatList. Only called at game-end after a succesfull voting phase
- *  $Param  MapName The Voted map.
+ *  $Param  mapName The Voted map.
  *
  **************************************************************************************************/
-function updateRepeatList(string mapname) {
+function updateRepeatList(string mapName) {
   local int x;
   local string nextmap;
 
-  if (mapname == "") return;
+  if (mapName == "") return;
 
-  for(x=0; x < UrSMapVoteConfig(xConf).RepeatLimit; x++) {
-    if (UrSMapVoteConfig(xConf).votedMaps[x] == mapname) return;
+  for(x=0; x < UrSMapVoteConfig(xConf).repeatLimit; x++) {
+    if (UrSMapVoteConfig(xConf).votedMaps[x] == mapName) return;
   }
 
-  for(x=0; x < UrSMapVoteConfig(xConf).RepeatLimit+1; x++) {
-    if (x == UrSMapVoteConfig(xConf).RepeatLimit) {
-      UrSMapVoteConfig(xConf).votedMaps[0] = mapname;
+  for(x=0; x < UrSMapVoteConfig(xConf).repeatLimit+1; x++) {
+    if (x == UrSMapVoteConfig(xConf).repeatLimit) {
+      UrSMapVoteConfig(xConf).votedMaps[0] = mapName;
       UrSMapVoteConfig(xConf).saveconfig();
       return;
     }
-    nextmap = UrSMapVoteConfig(xConf).votedMaps[UrSMapVoteConfig(xConf).RepeatLimit - (x+1)];
-    UrSMapVoteConfig(xConf).votedMaps[UrSMapVoteConfig(xConf).RepeatLimit - x] = nextmap;
+    nextmap = UrSMapVoteConfig(xConf).votedMaps[UrSMapVoteConfig(xConf).repeatLimit - (x+1)];
+    UrSMapVoteConfig(xConf).votedMaps[UrSMapVoteConfig(xConf).repeatLimit - x] = nextmap;
   }
 }
 
@@ -543,12 +537,11 @@ function updateRepeatList(string mapname) {
  *  $DESCRIPTION  Closes all open VoteWindows on the clients.
  *
  **************************************************************************************************/
-function CloseVoteWindows() {
+function closeVoteWindows() {
   local NexgenClient client;
   local UrSMapVoteClient xClient;
 
   for (client = control.clientList; client != none; client = client.nextClient) {
-
     xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
     if (xClient != None) {
       xClient.closeVotewindow();
@@ -559,11 +552,11 @@ function CloseVoteWindows() {
 /***************************************************************************************************
  *
  *  $DESCRIPTION  Handles a given vote.
- *  $Param  MapName The voted map.
+ *  $Param  mapName The voted map.
  *  $Param  Voter   The Voter.
  *
  **************************************************************************************************/
-function SubmitVote(string MapName, Actor Voter) {
+function submitVote(string mapName, Actor Voter) {
   local NexgenClient client;
   local int PlayerIndex,x,MapIndex,i;
   
@@ -578,23 +571,23 @@ function SubmitVote(string MapName, Actor Voter) {
   }
   
   // Check if vote has already ended
-  if(bLevelSwitchPending || Left(MapName,3) == "[X]") return;
+  if(bLevelSwitchPending || Left(mapName,3) == "[X]") return;
 
   // Check if map has been marked out
-  for(x=0; x < UrSMapVoteConfig(xConf).RepeatLimit; x++) {
-    if(UrSMapVoteConfig(xConf).votedMaps[x] == MapName) {
+  for(x=0; x < UrSMapVoteConfig(xConf).repeatLimit; x++) {
+    if(UrSMapVoteConfig(xConf).votedMaps[x] == mapName) {
       client.showMsg("<C00>You can not vote for this map.");
       return;
     }
   }
 
   // Check if the voter is a valid player.
-  PlayerIndex = FindPlayerIndex(client.player.PlayerReplicationInfo.PlayerID);
+  PlayerIndex = findPlayerIndex(client.player.PlayerReplicationInfo.playerID);
   if(PlayerIndex == -1) return;
 
   // Check if voted map is in the maplist
-  for(x=1; x<=MapCount; x++) {
-    if(maplist[x] == MapName) {
+  for(x=1; x<=mapCount; x++) {
+    if(maplist[x] == mapName) {
       MapIndex = x;
       break;
     }
@@ -604,31 +597,30 @@ function SubmitVote(string MapName, Actor Voter) {
   if(MapIndex == 0) return;
 
   // Check if player has already voted for this map
-  if(PlayerVote[PlayerIndex] == MapIndex) return;
+  if(playerVote[PlayerIndex] == MapIndex) return;
 
   // Register vote
-  PlayerVote[PlayerIndex] = MapIndex;
+  playerVote[PlayerIndex] = MapIndex;
 
   // Inform about vote.
-  i = InStr(Caps(MapName), ".UNR");
-  if(i != -1) MapName = Left(MapName, i);
-  control.broadcastMsg(client.playerName $ " voted for " $ MapName $".");
+  i = InStr(Caps(mapName), ".UNR");
+  if(i != -1) mapName = Left(mapName, i);
+  control.broadcastMsg(client.playerName $ " voted for " $ mapName $".");
 
   // Call main handler.
-  TallyVotes(false);
+  tallyVotes(false);
 }
 
 
 /***************************************************************************************************
  *
  *  $DESCRIPTION Sets up the ServerTravel string.
- *  $Param  MapName  The voted map.
+ *  $Param  mapName  The voted map.
  *  $Return The ServerTravel string.
  *
  **************************************************************************************************/
-function string SetupGameMap(string MapName)
-{
-  return MapName$"?game="$UrSMapVoteConfig(xConf).GameType;
+function string setupGameMap(string mapName) {
+  return mapName$"?game="$UrSMapVoteConfig(xConf).gameType;
 }
 
 /***************************************************************************************************
@@ -643,18 +635,16 @@ function updatevotelist() {
 
   // get client list.
   for (client = control.clientList; client != none; client = client.nextClient) {
-
     xClient = UrSMapVoteClient(client.getController(class'UrSMapVoteClient'.default.ctrlID));
 
     if (xClient != None) {
-
       // First clear all existing entries
       xClient.clearList();
 
       // Update entries
       x=0;
-      while(MAPVOTENAME[x] != "" && MAPVOTECOUNTS[x] > 0 && x<99) {
-        xClient.updateVoteBox(MAPVOTECOUNTS[x], MAPVOTENAME[x], x);
+      while(mapvotename[x] != "" && mapvotecounts[x] > 0 && x<99) {
+        xClient.updateVoteBox(mapvotecounts[x], mapvotename[x], x);
         x++;
       }
     }
@@ -668,24 +658,23 @@ function updatevotelist() {
  *
  **************************************************************************************************/
 function setTimeLimit(int amount) {
-	local DeathMatchPlus game;
-	local int previousTimeLimit;
+  local DeathMatchPlus game;
+  local int previousTimeLimit;
 
-	// Preliminary checks.
-	if (!level.game.isA('DeathMatchPlus')) {
-		return;
-	}
+  // Preliminary checks.
+  if (!level.game.isA('DeathMatchPlus')) {
+    return;
+  }
 
-	// Get DeathMatchPlus game.
-	game = DeathMatchPlus(level.game);
+  // Get DeathMatchPlus game.
+  game = DeathMatchPlus(level.game);
 
-	// Change time limit.
-	previousTimeLimit = game.timeLimit;
+  // Change time limit.
+  previousTimeLimit = game.timeLimit;
 
-	game.timeLimit = amount;
-	TournamentGameReplicationInfo(game.gameReplicationInfo).timeLimit = amount;
-	game.saveConfig();
-
+  game.timeLimit = amount;
+  TournamentGameReplicationInfo(game.gameReplicationInfo).timeLimit = amount;
+  game.saveConfig();
 }
 
 /***************************************************************************************************
@@ -695,20 +684,20 @@ function setTimeLimit(int amount) {
  *
  **************************************************************************************************/
 function setTeamScoreLimit(int amount) {
-	local TeamGamePlus game;
+  local TeamGamePlus game;
 
-	// Preliminary checks.
-	if (!level.game.isA('TeamGamePlus') || amount < 1) {
-		return;
-	}
+  // Preliminary checks.
+  if (!level.game.isA('TeamGamePlus') || amount < 1) {
+    return;
+  }
 
-	// Get TeamGamePlus game.
-	game = TeamGamePlus(level.game);
+  // Get TeamGamePlus game.
+  game = TeamGamePlus(level.game);
 
-	// Change frag limit.
-	game.goalTeamScore = amount;
-	TournamentGameReplicationInfo(game.gameReplicationInfo).goalTeamScore = amount;
-	game.saveConfig();
+  // Change frag limit.
+  game.goalTeamScore = amount;
+  TournamentGameReplicationInfo(game.gameReplicationInfo).goalTeamScore = amount;
+  game.saveConfig();
 }
 
 /***************************************************************************************************
@@ -719,15 +708,15 @@ function setTeamScoreLimit(int amount) {
  **************************************************************************************************/
 function setGameSpeed(int gameSpeed) {
 
-	// Preliminary checks.
-	if (gameSpeed < 50) {
-		return;
-	}
+  // Preliminary checks.
+  if (gameSpeed < 50) {
+    return;
+  }
 
-	// Change the game speed.
-	level.game.setGameSpeed(gameSpeed / 100.0);
-	level.game.saveConfig();
-	level.game.gameReplicationInfo.saveConfig();
+  // Change the game speed.
+  level.game.setGameSpeed(gameSpeed / 100.0);
+  level.game.saveConfig();
+  level.game.gameReplicationInfo.saveConfig();
 }
 
 /***************************************************************************************************
@@ -827,5 +816,5 @@ defaultproperties
      clientControllerClass=Class'UrSMapVoteClient'
      pluginName="UrSMapVote"
      pluginAuthor="Sp0ngeb0b"
-     pluginVersion="2b"
+     pluginVersion="3"
 }
